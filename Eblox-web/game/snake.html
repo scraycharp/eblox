@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Змейка — ebloX</title>
+    <link rel="stylesheet" href="arcade.css">
+    <script src="../eblox-tokens.js" defer></script>
+    <script src="arcade-rules.js" defer></script>
+    <script src="arcade.js" defer></script>
+</head>
+<body data-game="snake">
+    <main class="arcade">
+        <header class="topbar"><a id="back" class="back" href="../main.html">← В ebloX</a><span class="brand">EBLOX / ARCADE</span></header>
+        <div class="heading"><div><h1 id="title">Змейка</h1><p id="subtitle" class="subtitle">Собирай яблоки. Не врезайся. Побей рекорд.</p></div><span class="game-number">ARCADE / 05</span></div>
+        <section class="stats" aria-label="Статистика" id="stats">
+            <div class="stat"><span class="stat-label" id="score-label">Счёт</span><strong class="stat-value" id="score">0</strong></div>
+            <div class="stat"><span class="stat-label" id="extra-label">Рекорд</span><strong class="stat-value" id="extra">0</strong></div>
+            <div class="stat stat-reward"><span class="stat-label" id="tokens-label">Токены за игру</span><strong class="stat-value" id="tokens">+0</strong></div>
+        </section>
+        <div class="play-layout">
+            <div class="arena">
+                <canvas id="board" width="480" height="480" tabindex="0" aria-label="Игровое поле змейки"></canvas>
+                <div id="overlay" class="overlay" role="dialog" aria-modal="false" aria-labelledby="overlay-title" aria-describedby="overlay-text">
+                    <span class="overlay-eyebrow">EBLOX ARCADE</span><h2 id="overlay-title">Готов к игре?</h2><p id="overlay-text">Управляй стрелками или WASD. Каждое яблоко приносит 1 токен.</p><button id="primary" class="primary" type="button">Играть</button>
+                </div>
+            </div>
+            <aside class="side">
+                <button id="pause" class="secondary" type="button" disabled>Пауза</button>
+                <button id="restart" class="secondary" type="button">Заново</button>
+                <div class="dpad" id="dpad" aria-label="Направление">
+                    <button class="secondary" data-direction="up" type="button" aria-label="Вверх">↑</button>
+                    <button class="secondary" data-direction="left" type="button" aria-label="Влево">←</button>
+                    <button class="secondary" data-direction="down" type="button" aria-label="Вниз">↓</button>
+                    <button class="secondary" data-direction="right" type="button" aria-label="Вправо">→</button>
+                </div>
+                <div class="help"><h3 id="help-title">Управление</h3><p id="help-text">Стрелки / WASD — движение
+Пробел / Esc — пауза
+R — новая игра
+На телефоне: свайпы или кнопки</p></div>
+            </aside>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <p id="footer" class="footer">1 яблоко = 1 токен. Награды сохраняются сразу.</p>
+    </main>
+</body>
+</html>

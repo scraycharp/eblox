@@ -1,0 +1,11 @@
+{
+  "name": "eblox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ebloX web launcher",
+  "scripts": {
+    "test": "node --test game/arcade.test.js",
+    "start": "python3 -m http.server 5173",
+    "serve": "npx --yes serve -l 5173 ."
+  }
+}

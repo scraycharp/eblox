@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Найди пару — ebloX</title>
+    <link rel="stylesheet" href="arcade.css">
+    <script src="../eblox-tokens.js" defer></script>
+    <script src="arcade-rules.js" defer></script>
+    <script src="arcade.js" defer></script>
+</head>
+<body data-game="memory">
+    <main class="arcade">
+        <header class="topbar"><a id="back" class="back" href="../main.html">← В ebloX</a><span class="brand">EBLOX / ARCADE</span></header>
+        <div class="heading"><div><h1 id="title">Найди пару</h1><p id="subtitle" class="subtitle">16 карточек. 8 пар. Доверься своей памяти.</p></div><span class="game-number">ARCADE / 06</span></div>
+        <section class="stats" aria-label="Статистика" id="stats">
+            <div class="stat"><span class="stat-label" id="score-label">Найдено пар</span><strong class="stat-value" id="score">0 / 8</strong></div>
+            <div class="stat"><span class="stat-label" id="extra-label">Ходы</span><strong class="stat-value" id="extra">0</strong></div>
+            <div class="stat stat-reward"><span class="stat-label" id="tokens-label">Токены за игру</span><strong class="stat-value" id="tokens">+0</strong></div>
+        </section>
+        <div class="play-layout">
+            <div class="arena">
+                <div id="board" class="memory-board" role="group" aria-label="Карточки"></div>
+                <div id="overlay" class="overlay" role="dialog" aria-modal="false" aria-labelledby="overlay-title" aria-describedby="overlay-text">
+                    <span class="overlay-eyebrow">EBLOX ARCADE</span><h2 id="overlay-title">Готов к игре?</h2><p id="overlay-text">Открывай по две карточки и находи одинаковые символы. Собери все 8 пар.</p><button id="primary" class="primary" type="button">Играть</button>
+                </div>
+            </div>
+            <aside class="side">
+                <button id="pause" class="secondary" type="button" disabled>Пауза</button>
+                <button id="restart" class="secondary" type="button">Заново</button>
+                <div class="help"><h3 id="help-title">Управление</h3><p id="help-text">Нажми на две карточки
+Tab + Enter — выбор с клавиатуры
+Esc — пауза
+R — новая игра</p></div>
+            </aside>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <p id="footer" class="footer">2 токена за пару + 4 за всё поле. Награды сохраняются сразу.</p>
+    </main>
+</body>
+</html>

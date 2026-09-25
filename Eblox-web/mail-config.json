@@ -1,0 +1,11 @@
+{
+    "provider": "resend",
+    "resendApiKey": "re_HUFE9X9n_G6K6iXhEhV34RfxFsHxuMFdd",
+    "senderEmail": "ebloxsupport@ntteamnt.com",
+    "senderName": "ebloX Support",
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "user": "",
+    "pass": ""
+}

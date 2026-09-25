@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>ebloX</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <svg class="svg-sprite" aria-hidden="true" focusable="false"><defs>
+        <symbol id="i-minimize" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+        <symbol id="i-maximize" viewBox="0 0 24 24"><rect x="5.5" y="5.5" width="13" height="13" rx="2.5"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9.75l6 6 6-6"/></symbol>
+        <symbol id="i-inject" viewBox="0 0 24 24"><path d="M12 3v10"/><path d="M8.5 9.5L12 13l3.5-3.5"/><path d="M4.5 15.5v2.5a2.5 2.5 0 0 0 2.5 2.5h10a2.5 2.5 0 0 0 2.5-2.5v-2.5"/></symbol>
+        <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M9.5 9.5v10"/></symbol>
+        <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1z"/><path d="M14.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M17.5 7a7 7 0 0 1 0 10"/></symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.8v5.2c0 4.1-2.8 7.3-7 9-4.2-1.7-7-4.9-7-9V6.3l7-2.8z"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.75"/><path d="M4.75 20c0-3.6 3.25-5.75 7.25-5.75S19.25 16.4 19.25 20"/></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="8.75" cy="9.75" r="1.6"/><path d="M4 16.5l4.75-4.25 3.75 3.25 3-2.5 4.5 4"/></symbol>
+        <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3.5 10.5h2.5L10.5 7v10L6 13.5H3.5a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1z"/><path d="M6.5 14v3.5a1.5 1.5 0 0 0 3 0"/><path d="M14 9a4 4 0 0 1 0 6"/><path d="M16.75 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+        <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 1.75 1.75 0 0 0 1.3-2.95 1.6 1.6 0 0 1 1.2-2.7h1.6a4.4 4.4 0 0 0 4.4-4.4c0-3.9-3.8-6.95-8.5-6.95z"/><circle cx="8" cy="12.75" r=".9"/><circle cx="9.75" cy="8.75" r=".9"/><circle cx="14.5" cy="8.25" r=".9"/></symbol>
+        <symbol id="i-drive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="6.5" rx="2"/><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M7 7.75h.01M7 16.25h.01"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.75" y="10.5" width="14.5" height="9.75" rx="2.5"/><path d="M8.25 10.5V8a3.75 3.75 0 0 1 7.5 0v2.5"/><path d="M12 14.25v2.5"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4.5 4.5 8.5-9.5"/></symbol>
+        <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.25 3L6 13.25h4.75L10 21l7.25-10.25H12.5L13.25 3z"/></symbol>
+        <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5l1.85 5.4 5.4 1.85-5.4 1.85L12 18l-1.85-5.4-5.4-1.85 5.4-1.85L12 3.5z"/></symbol>
+        <symbol id="i-list" viewBox="0 0 24 24"><path d="M4 7.25l1.75 1.75L9 5.5"/><path d="M4 14.75l1.75 1.75L9 13"/><path d="M12.25 7.75h7.5M12.25 15.25h7.5"/></symbol>
+    </defs></svg>
+    <div class="app" id="app">
+        <video class="app-bg-video" id="app-bg-video" src="assets/mainmenu.mp4" poster="assets/background_1.png" autoplay muted loop playsinline></video>
+        <div class="app-bg-overlay"></div>
+
+        <header class="titlebar">
+            <div class="brand">
+                <img src="assets/logo.png" alt="ebloX">
+                <span class="brand-name">ebloX</span>
+                <span class="brand-version">v 2.1.1.3</span>
+            </div>
+            <div class="window-controls">
+                <button class="win-btn" id="btn-minimize" data-i18n-title="minimizeWindow" title="Свернуть"><svg class="icon"><use href="#i-minimize"/></svg></button>
+                <button class="win-btn" id="btn-maximize" data-i18n-title="maximizeWindow" title="Развернуть"><svg class="icon"><use href="#i-maximize"/></svg></button>
+                <button class="win-btn win-close" id="btn-close" data-i18n-title="closeWindow" title="Закрыть"><svg class="icon"><use href="#i-close"/></svg></button>
+            </div>
+        </header>
+
+        <img src="assets/logo.png" class="corner-logo" alt="ebloX">
+
+        <div class="top-controls">
+            <button class="gear-btn" id="open-settings" data-i18n-title="settings" title="Настройки">
+                <img src="assets/settings.png" class="settings-icon" alt="settings">
+            </button>
+            <div class="combo-wrap" id="lang-wrap">
+                <button class="combo-btn" id="lang-btn" type="button">
+                    <span class="left">
+                        <img src="assets/russia.png" id="lang-flag" alt="lang">
+                        <span id="lang-label">RU</span>
+                    </span>
+                    <img src="assets/markcombobox.png" class="combo-arrow" alt="">
+                </button>
+                <div class="dropdown" id="lang-dropdown">
+                    <div class="dropdown-title" data-i18n="langTitle">Выбор языка</div>
+                    <button class="language-item" data-lang="ru" type="button">
+                        <img src="assets/russia.png" alt="RU">
+                        <div class="item-main"><span>Русский</span><span class="item-sub">Russian</span></div>
+                    </button>
+                    <button class="language-item" data-lang="en" type="button">
+                        <img src="assets/english.png" alt="EN">
+                        <div class="item-main"><span>English</span><span class="item-sub">Английский</span></div>
+                    </button>
+                </div>
+            </div>
+            <div class="pill online-pill">
+                <span class="dot"></span>
+                <span>826 используют</span>
+            </div>
+            <button class="pill tokens-pill" id="tokens-pill" type="button" data-i18n-title="tokensTitle" title="Игровые токены">
+                <img src="assets/start.png" class="tokens-pill-icon" alt="">
+                <span class="tokens-pill-value" id="tokens-pill-value">0</span>
+                <span class="tokens-pill-time" id="tokens-pill-time">00:00</span>
+            </button>
+            <div class="combo-wrap" id="account-wrap">
+                <button class="combo-btn account-btn" id="account-btn" type="button">
+                    <span class="left">
+                        <img src="assets/emptyavatar.png" id="account-avatar" alt="avatar" class="account-avatar-img">
+                        <span id="account-label">Аккаунт</span>
+                    </span>
+                    <img src="assets/markcombobox.png" class="combo-arrow" alt="">
+                </button>
+                <div class="dropdown" id="account-dropdown">
+                    <div class="dropdown-title" data-i18n="account">Аккаунт</div>
+                    <button class="account-item" type="button" id="account-open-settings" data-i18n-title="accountOpenSettings" title="Настройки аккаунта">
+                        <img src="assets/emptyavatar.png" alt="avatar" class="account-avatar-img">
+                        <div class="item-main">
+                            <span id="current-account-name">Аккаунт</span>
+                            <div class="account-progress">
+                                <div class="account-progress-bar">
+                                    <div class="account-progress-fill" id="account-progress-fill" style="width:0%"></div>
+                                </div>
+                                <span class="account-progress-label" id="account-progress-label">0/5 заданий</span>
+                            </div>
+                        </div>
+                    </button>
+                    <button class="action-item" id="add-account-btn" type="button" data-i18n="logout">Выйти из аккаунта</button>
+                </div>
+            </div>
+            <button class="pill tasks-pill" id="open-tasks" data-i18n-title="tasksTitle" title="Задания">
+                <svg class="icon"><use href="#i-list"/></svg>
+                <span data-i18n="tasks">Задания</span>
+            </button>
+        </div>
+
+        <main class="content">
+            <section class="view-layer library-view active" id="library-view">
+                <div class="library-scroll">
+                    <div class="cards-grid">
+                        <button class="library-card" type="button" data-title="Liteway" data-product="liteway" data-price="0" data-background="assets/lw_background.png" data-preview="assets/lw_preview.png" data-description="Лёгкий и быстрый чит для обхода античита. Поддержка большинства карт и режимов, минимальная нагрузка на систему." data-uses="1204" data-category="Популярный, Частый выбор" data-description-key="linewayDesc" data-category-keys="popular,frequent" data-full-desc-key="linewayFullDesc" data-features-key="linewayFeatures" data-screenshots="assets/shot_lineway_1.jpg,assets/shot_lineway_2.jpg,assets/shot_lineway_3.jpg">
+                            <div class="card-media" style="background-image: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)), url('assets/lw_preview.png');">
+                                <div class="card-badge"><span class="dot"></span> 1204 используют</div>
+                                <div class="card-tags"><span class="card-tag" data-i18n="popular">Популярный</span><span class="card-tag hot" data-i18n="frequent">Частый выбор</span></div>
+                            </div>
+                            <div class="card-title">Liteway<span class="card-price free" data-price-label></span></div>
+                        </button>
+                        <button class="library-card" type="button" data-title="Debute" data-product="debute" data-price="500" data-background="assets/db_background.png" data-preview="assets/db_preview.png" data-description="Продвинутый инструмент с расширенным функционалом: WallHack, AimBot, SpeedMod. Обновляется под каждую версию игры." data-uses="873" data-category="Эксклюзив" data-description-key="debuteDesc" data-category-keys="exclusive" data-full-desc-key="debuteFullDesc" data-features-key="debuteFeatures" data-screenshots="assets/shot_debute_1.jpg,assets/shot_debute_2.jpg,assets/shot_debute_3.jpg">
+                            <div class="card-media" style="background-image: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)), url('assets/db_preview.png');">
+                                <div class="card-badge"><span class="dot"></span> 873 используют</div>
+                                <div class="card-tags"><span class="card-tag" data-i18n="exclusive">Эксклюзив</span></div>
+                            </div>
+                            <div class="card-title">Debute<span class="card-price paid" data-price-label></span></div>
+                        </button>
+                        <button class="library-card" type="button" data-title="ebloX Inclusive" data-product="eblox-inclusive" data-price="1300" data-background="assets/ei_background.png" data-preview="assets/ei_preview.png" data-description="Премиум-пак от команды ebloX. Все функции в одном месте: ESP, TriggerBot, NoClip, FlyHack и многое другое." data-uses="2048" data-category="Премиум, Топ" data-description-key="ebloxInclusiveDesc" data-category-keys="premium,top" data-full-desc-key="ebloxInclusiveFullDesc" data-features-key="ebloxInclusiveFeatures" data-screenshots="assets/shot_inclusive_1.jpg,assets/shot_inclusive_2.jpg,assets/shot_inclusive_3.jpg">
+                            <div class="card-media" style="background-image: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)), url('assets/ei_preview.png');">
+                                <div class="card-badge"><span class="dot"></span> 2048 используют</div>
+                                <div class="card-tags"><span class="card-tag" data-i18n="premium">Премиум</span><span class="card-tag hot" data-i18n="top">Топ</span></div>
+                            </div>
+                            <div class="card-title">ebloX Inclusive<span class="card-price paid" data-price-label></span></div>
+                        </button>
+                    </div>
+                    <div class="news-grid">
+                        <div class="news-card" data-news-title="Сбор птырке денег на корм" data-news-text="Сегодня в зоомагазине на улице Ебального, 15 посетители увидели кореллу по имени Птырка: попугайчик прилетел за кормом и расплакался, заметив, что цена на любимые семечки выросла вдвое." data-news-secondary="Птырочка тронула всю страну — уже объявлено о сборе корма и средств для Птырки. Пожертвования тапайте правее." data-news-image="assets/news_1.png" data-news-image-en="assets/news_1ENG.png" data-news-type="tap" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.26)), url('assets/news_1.png');" data-news-key="news1">
+                            <div class="news-overlay"></div>
+                            <div class="news-content">
+                                <div class="news-title" data-i18n="news1title">Сбор денег на корм для Птырки</div>
+                                <div class="news-meta">
+                                    <img src="assets/scray.png" alt="scray"><div class="news-meta-text"><div class="news-author">scray</div><div class="news-date" data-i18n="news1date">2 мая 2026</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="news-card" data-news-title="НОВЫЙ КОНКУРЕНТ НЕДОХАКЕРОВ НАЧИНАЕТ ПРОДВИГАТЬСЯ В ТРЕНДЫ" data-news-text="НиггаХакеры стремительно набирают популярность и начинают продвигаться в тренды, составляя серьёзную конкуренцию на рынке." data-news-secondary="Чтобы остановить конкурента, обыграй их в крестики-нолики! Победи 5 раз и не дай им подняться в тренды." data-news-image="assets/news_2.png" data-news-image-en="assets/news_2ENG.png" data-news-type="tictactoe" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.26)), url('assets/news_2.png');" data-news-key="news2">
+                            <div class="news-overlay"></div>
+                            <div class="news-content">
+                                <div class="news-title" data-i18n="news2title">НОВЫЙ КОНКУРЕНТ НЕДОХАКЕРОВ НАЧИНАЕТ ПРОДВИГАТЬСЯ В ТРЕНДЫ</div>
+                                <div class="news-meta">
+                                    <img src="assets/cheese.png" alt="Сыр"><div class="news-meta-text"><div class="news-author" data-i18n="news2author">Сыр</div><div class="news-date" data-i18n="news2date">2 мая 2026</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="news-card" data-news-title="НОВЫЕ СТРИМЫ НА КАНАЛЕ НЕДОХАКЕРЫ LITE" data-news-text="Новые стримы с очень интересным сюжетом уже вышли на канале НЕДОХАКЕРЫ Lite. Ведущий по имени Иван нашёл новую подработку - уролог в местной поликлинике." data-news-secondary="Помоги Ивану поймать как можно больше пациентов за 15 секунд! Кликай по убегающим пациентам." data-news-image="assets/news_3.png" data-news-image-en="assets/news_3ENG.png" data-news-type="catch" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.26)), url('assets/news_3.png');" data-news-key="news3">
+                            <div class="news-overlay"></div>
+                            <div class="news-content">
+                                <div class="news-title" data-i18n="news3title">НОВЫЕ СТРИМЫ НА КАНАЛЕ НЕДОХАКЕРЫ LITE</div>
+                                <div class="news-meta">
+                                    <img src="assets/meet.png" alt="scray"><div class="news-meta-text"><div class="news-author" data-i18n="news3author">Трусы из колбасы</div><div class="news-date" data-i18n="news3date">3 мая 2026</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view-layer detail-view" id="detail-view">
+                <div class="back-section">
+                    <button class="back-btn" id="back-btn" type="button" data-i18n-title="back" title="Назад"><img src="assets/back.png" alt="back"></button>
+                </div>
+                <div class="detail-layout">
+                    <div class="detail-content">
+                        <div class="detail-main">
+                            <div class="detail-tags">
+                                <span class="detail-chip" data-i18n="popular">Популярный</span>
+                                <span class="detail-chip hot" data-i18n="frequent">Частый выбор</span>
+                            </div>
+                            <h1 id="detail-title">Liteway</h1>
+                            <p id="detail-desc" data-i18n="linewayDesc"></p>
+                            <div class="detail-full-desc" id="detail-full-desc"></div>
+                            <div class="detail-features" id="detail-features"></div>
+                            <div class="detail-actions">
+                                <button class="inject-btn paused" id="inject-btn" type="button">
+                                    <img src="assets/start.png" id="inject-icon" alt="state"><span id="inject-text">Старт</span>
+                                </button>
+                                <button class="buy-btn" id="buy-btn" type="button" style="display:none;">
+                                    <span id="buy-text">Купить</span>
+                                    <span class="buy-price" id="buy-price"></span>
+                                </button>
+                                <div class="pill detail-online"><span class="dot"></span><span>1204 используют</span></div>
+                            </div>
+                            <div class="detail-license" id="detail-license"></div>
+                            <div class="progress-block" id="progress-block" style="display:none;">
+                                <div class="progress-label">Инжект в плейс...</div>
+                                <div class="progress-shell"><div class="progress-stripe" id="progress-stripe"></div></div>
+                            </div>
+                        </div>
+                        <div class="detail-sidebar">
+                            <div class="screenshots-section" id="screenshots-section">
+                                <h2 class="screenshots-title" data-i18n="screenshots">Скриншоты</h2>
+                                <div class="screenshots-gallery" id="screenshots-gallery"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view-layer news-detail-view" id="news-detail-view">
+                <img src="assets/background_2.png" class="news-bg-image" alt="">
+                <div class="back-section news-back-section">
+                    <button class="back-btn" id="news-back-btn" type="button" data-i18n-title="back" title="Назад"><img src="assets/back.png" alt="back"></button>
+                </div>
+                <div class="news-detail-wrapper">
+                    <div class="news-detail-container">
+                        <div class="news-left-content">
+                            <div class="news-detail-image">
+                                <img src="assets/news_1.png" alt="Птырка" class="ptyrka-image">
+                                <div class="news-image-overlay"></div>
+                            </div>
+                            <div class="news-text-block">
+                                <h1 class="news-detail-title">Сбор птырке денег на корм</h1>
+                                <p class="news-detail-text">Сегодня в зоомагазине на улице Ебального, 15 посетители увидели кореллу по имени Птырка: попугайчик прилетел за кормом и расплакался, заметив, что цена на любимые семечки выросла вдвое.</p>
+                                <p class="news-detail-text-secondary">Птырочка тронула всю страну — уже объявлено о сборе корма и средств для Птырки. Пожертвования тапайте правее.</p>
+                            </div>
+                        </div>
+                        <div class="news-right-content" id="news-right-tap">
+                            <div class="tap-wrapper">
+                                <button class="tap-circle-outer" id="tap-button" type="button">
+                                    <div class="tap-circle-inner"><span class="tap-text">Тапай сюда!</span></div>
+                                </button>
+                                <div class="tap-earnings">Заработанное кол-во рублей: <span class="earnings-amount" id="earnings-amount">0</span> руб.</div>
+                            </div>
+                            <button class="send-money-btn" id="send-money-btn" type="button" data-i18n="send">Отправить деньги</button>
+                            <div class="cost-label" data-i18n="cost">Стоимость: 250 руб.</div>
+                        </div>
+                        <div class="news-right-content" id="news-right-tictactoe" style="display: none;">
+                            <div class="tictactoe-wrapper">
+                                <h3 class="tictactoe-title" data-i18n="tictactoeTitle">Крестики-нолики против НиггаХакеров</h3>
+                                <div class="tictactoe-score" id="tictactoe-score">Победы: Ты <span id="player-score">0</span> - <span id="bot-score">0</span> НиггаХакеры</div>
+                                <div class="tictactoe-board" id="tictactoe-board">
+                                    <button class="tictactoe-cell" data-index="0"></button><button class="tictactoe-cell" data-index="1"></button><button class="tictactoe-cell" data-index="2"></button>
+                                    <button class="tictactoe-cell" data-index="3"></button><button class="tictactoe-cell" data-index="4"></button><button class="tictactoe-cell" data-index="5"></button>
+                                    <button class="tictactoe-cell" data-index="6"></button><button class="tictactoe-cell" data-index="7"></button><button class="tictactoe-cell" data-index="8"></button>
+                                </div>
+                                <div class="tictactoe-status" id="tictactoe-status" data-i18n="yourTurn">Твой ход (X)</div>
+                            </div>
+                        </div>
+                        <div class="news-right-content" id="news-right-catch" style="display: none;">
+                            <div class="catch-wrapper">
+                                <h3 class="catch-title" data-i18n="catchTitle">Поймай пациентов для Ивана!</h3>
+                                <div class="catch-score-display">Поймано: <span id="catch-count">0</span> | Время: <span id="catch-timer">15</span>с</div>
+                                <button class="catch-start-btn" id="catch-start-btn" type="button" data-i18n="startGame">Начать ловлю!</button>
+                                <div class="catch-result" id="catch-result"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Панель заданий -->
+        <div class="tasks-backdrop" id="tasks-backdrop" aria-hidden="true" hidden></div>
+        <aside class="tasks-panel" id="tasks-panel" role="dialog" aria-modal="true" aria-labelledby="tasks-title" aria-describedby="tasks-subtitle" aria-hidden="true" tabindex="-1" inert>
+            <div class="tasks-head">
+                <div>
+                    <div class="tasks-eyebrow" data-i18n="tasksEyebrow">Центр активности</div>
+                    <h2 id="tasks-title" data-i18n="tasksTitle">Задания</h2>
+                    <p id="tasks-subtitle" data-i18n="tasksSubtitle">Маленькие миссии. Большой прогресс.</p>
+                </div>
+                <button class="close-x" id="close-tasks" type="button" data-i18n-title="tasksClose" title="Закрыть задания" aria-label="Закрыть задания"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+            </div>
+            <div class="tasks-body">
+                <section class="tasks-xp" aria-labelledby="tasks-progress-title">
+                    <div class="tasks-level-badge" aria-hidden="true"><svg class="icon"><use href="#i-spark"/></svg><strong id="tasks-level-number">1</strong></div>
+                    <div class="tasks-xp-main">
+                        <div class="tasks-xp-head"><span id="tasks-progress-title" data-i18n="tasksProgress">Твой прогресс</span><span class="tasks-xp-text" id="tasks-xp-text">Уровень 1</span></div>
+                        <div class="tasks-xp-stats"><strong id="tasks-xp-value">0 <small>/ 500 XP</small></strong><span id="tasks-xp-next">500 XP до уровня 2</span></div>
+                        <div class="tasks-xp-bar" id="tasks-xp-bar" role="progressbar" aria-label="Опыт" aria-valuemin="0" aria-valuemax="500" aria-valuenow="0"><div class="tasks-xp-fill" id="tasks-xp-fill"></div></div>
+                    </div>
+                    <div class="tasks-summary"><strong id="tasks-done-count">0<span>/5</span></strong><span data-i18n="tasksSummaryDone">завершено</span></div>
+                </section>
+                <div class="tasks-toolbar">
+                    <div class="tasks-filters" role="group" aria-label="Фильтр заданий" id="tasks-filters">
+                        <button class="tasks-filter active" type="button" data-task-filter="all" aria-pressed="true" aria-controls="tasks-list"><span data-i18n="tasksFilterAll">Все</span><span class="tasks-filter-count" data-task-count="all">5</span></button>
+                        <button class="tasks-filter" type="button" data-task-filter="available" aria-pressed="false" aria-controls="tasks-list"><span data-i18n="tasksFilterAvailable">Доступные</span><span class="tasks-filter-count" data-task-count="available">4</span></button>
+                        <button class="tasks-filter" type="button" data-task-filter="completed" aria-pressed="false" aria-controls="tasks-list"><span data-i18n="tasksFilterCompleted">Выполненные</span><span class="tasks-filter-count" data-task-count="completed">0</span></button>
+                    </div>
+                    <span class="tasks-list-caption" id="tasks-list-caption"></span>
+                </div>
+                <div class="tasks-list" id="tasks-list" role="list" aria-label="Задания"></div>
+                <div class="tasks-empty" id="tasks-empty" role="status" hidden><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg><h3 id="tasks-empty-title"></h3><p id="tasks-empty-description"></p></div>
+            </div>
+            <footer class="tasks-footer"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span id="tasks-platform-note"></span></footer>
+        </aside>
+
+        <!-- Панель настроек -->
+        <aside class="settings-panel" id="settings-panel">
+            <div class="settings-head"><h2 data-i18n="settings">Настройки</h2><button class="close-x" id="close-settings" type="button"><svg class="icon"><use href="#i-close"/></svg></button></div>
+            <div class="settings-tabs" id="settings-tabs">
+                <button class="settings-tab active" type="button" data-tab="inject"><svg class="icon"><use href="#i-inject"/></svg><span data-i18n="tabInject">Инжект</span></button>
+                <button class="settings-tab" type="button" data-tab="interface"><svg class="icon"><use href="#i-layout"/></svg><span data-i18n="tabInterface">Интерфейс</span></button>
+                <button class="settings-tab" type="button" data-tab="sound"><svg class="icon"><use href="#i-sound"/></svg><span data-i18n="tabSound">Звук</span></button>
+                <button class="settings-tab" type="button" data-tab="system"><svg class="icon"><use href="#i-cpu"/></svg><span data-i18n="tabSystem">Система</span></button>
+                <button class="settings-tab" type="button" data-tab="privacy"><svg class="icon"><use href="#i-shield"/></svg><span data-i18n="tabPrivacy">Приватность</span></button>
+                <button class="settings-tab" type="button" data-tab="account"><svg class="icon"><use href="#i-user"/></svg><span data-i18n="tabAccount">Аккаунт</span></button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-section active" data-section="inject">
+                    <div class="setting-block">
+                        <h3 data-i18n="cores">Количество ядер для инжекта</h3>
+                        <div class="setting-help" data-i18n="coresHelp">Мы добавили данную функцию, в связи с тем, что при инжекте, у некоторых пользователей снимались трусы и ботинки</div>
+                        <div class="core-widget">
+                            <div class="core-slider-shell">
+                                <div class="core-track"></div><div class="core-fill" id="core-fill"></div><div class="core-glow" id="core-glow"></div>
+                                <input type="range" min="1" max="4" value="2" id="core-range" class="core-range">
+                            </div>
+                            <div class="core-labels"><span data-i18n="core1">1 ядро</span><span data-i18n="core2">2 ядра</span><span data-i18n="coreMax">Макс. кол-во ядер</span></div>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="dir">Укажите директорию Roblox</h3>
+                        <div class="setting-help" data-i18n="dirHelp">Укажите ниже директорию Roblox, чтобы инжектить наш Lua-скрипт в игру</div>
+                        <input class="dir-input" id="set-roblox-dir" type="text" data-i18n-placeholder="dirPlaceholder" placeholder="Директория игры...">
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="launcher">Отображение лаунчера после инжекта</h3>
+                        <div class="setting-help" data-i18n="launcherHelp">Параметр, который контролирует действие лаунчера после инжекта</div>
+                        <div class="launcher-radio-group">
+                            <label class="launcher-radio"><input type="radio" name="launcher-mode" value="minimize" checked><span class="launcher-radio-text" data-i18n="minimizeLauncher">Сворачивать</span></label>
+                            <label class="launcher-radio"><input type="radio" name="launcher-mode" value="close"><span class="launcher-radio-text" data-i18n="closeLauncher">Закрывать</span></label>
+                            <label class="launcher-radio"><input type="radio" name="launcher-mode" value="nothing"><span class="launcher-radio-text" data-i18n="nothing">Ничего не делать</span></label>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="injectDelay">Задержка перед инжектом</h3>
+                        <div class="setting-help" data-i18n="injectDelayHelp">Сколько секунд ждать после запуска игры перед инжектом</div>
+                        <div class="range-row">
+                            <input type="range" min="0" max="30" step="1" value="3" id="set-inject-delay" class="thin-range">
+                            <span class="range-value" id="set-inject-delay-value">3</span>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="injectMethod">Метод инжекта</h3>
+                        <div class="setting-help" data-i18n="injectMethodHelp">Способ внедрения скрипта в процесс игры</div>
+                        <select class="select-input" id="set-inject-method">
+                            <option value="auto" data-i18n="methodAuto">Автоматически</option>
+                            <option value="manual" data-i18n="methodManual">Вручную</option>
+                            <option value="safe" data-i18n="methodSafe">Безопасный</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="autoInject">Автоинжект</h3><div class="setting-help" data-i18n="autoInjectHelp">Запускать инжект сразу после старта игры</div></div>
+                        <label class="switch"><input type="checkbox" id="set-auto-inject"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="autoReinject">Повторный инжект</h3><div class="setting-help" data-i18n="autoReinjectHelp">Повторять попытку при неудаче</div></div>
+                        <label class="switch"><input type="checkbox" id="set-auto-reinject" checked><span class="switch-slider"></span></label>
+                    </div>
+                </div>
+
+                <div class="settings-section" data-section="interface">
+                    <div class="setting-block">
+                        <h3 data-i18n="language">Язык</h3>
+                        <div class="setting-help" data-i18n="languageHelp">Язык интерфейса лаунчера</div>
+                        <select class="select-input" id="set-language">
+                            <option value="ru" data-i18n="russianOption">Русский</option>
+                            <option value="en" data-i18n="englishOption">English</option>
+                        </select>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="theme">Тема оформления</h3>
+                        <div class="setting-help" data-i18n="themeHelp">Общая цветовая схема окна</div>
+                        <select class="select-input" id="set-theme">
+                            <option value="dark" data-i18n="themeDark">Тёмная</option>
+                            <option value="midnight" data-i18n="themeMidnight">Полночная</option>
+                            <option value="contrast" data-i18n="themeContrast">Контрастная</option>
+                        </select>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accent">Акцентный цвет</h3>
+                        <div class="setting-help" data-i18n="accentHelp">Цвет кнопок, полос прогресса и свечения</div>
+                        <div class="accent-row" id="set-accent-row">
+                            <button class="accent-dot active" type="button" data-accent="#70BEFF" style="--dot:#70BEFF"></button>
+                            <button class="accent-dot" type="button" data-accent="#8E7CFF" style="--dot:#8E7CFF"></button>
+                            <button class="accent-dot" type="button" data-accent="#4ADE80" style="--dot:#4ADE80"></button>
+                            <button class="accent-dot" type="button" data-accent="#FF7A7A" style="--dot:#FF7A7A"></button>
+                            <button class="accent-dot" type="button" data-accent="#FFC46B" style="--dot:#FFC46B"></button>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="uiScale">Масштаб интерфейса</h3>
+                        <div class="setting-help" data-i18n="uiScaleHelp">Размер всех элементов окна в процентах</div>
+                        <div class="range-row">
+                            <input type="range" min="80" max="130" step="5" value="100" id="set-ui-scale" class="thin-range">
+                            <span class="range-value" id="set-ui-scale-value">100%</span>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="animations">Анимации</h3><div class="setting-help" data-i18n="animationsHelp">Плавные переходы и эффекты</div></div>
+                        <label class="switch"><input type="checkbox" id="set-animations" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="compact">Компактный режим</h3><div class="setting-help" data-i18n="compactHelp">Меньше отступов в списках и карточках</div></div>
+                        <label class="switch"><input type="checkbox" id="set-compact"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="showTips">Подсказки</h3><div class="setting-help" data-i18n="showTipsHelp">Показывать всплывающие подсказки над кнопками</div></div>
+                        <label class="switch"><input type="checkbox" id="set-show-tips" checked><span class="switch-slider"></span></label>
+                    </div>
+                </div>
+
+                <div class="settings-section" data-section="sound">
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="music">Фоновая музыка</h3><div class="setting-help" data-i18n="musicHelp">Воспроизводить трек в лаунчере</div></div>
+                        <label class="switch"><input type="checkbox" id="set-music" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="musicVolume">Громкость музыки</h3>
+                        <div class="range-row">
+                            <input type="range" min="0" max="100" step="1" value="40" id="set-music-volume" class="thin-range">
+                            <span class="range-value" id="set-music-volume-value">40%</span>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="sfx">Звуки интерфейса</h3><div class="setting-help" data-i18n="sfxHelp">Щелчки и звуки уведомлений</div></div>
+                        <label class="switch"><input type="checkbox" id="set-sfx" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="sfxVolume">Громкость эффектов</h3>
+                        <div class="range-row">
+                            <input type="range" min="0" max="100" step="1" value="60" id="set-sfx-volume" class="thin-range">
+                            <span class="range-value" id="set-sfx-volume-value">60%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section" data-section="system">
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="autostart">Автозапуск с Windows</h3><div class="setting-help" data-i18n="autostartHelp">Запускать лаунчер при входе в систему</div></div>
+                        <label class="switch"><input type="checkbox" id="set-autostart"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="keepSession">Запоминать вход</h3><div class="setting-help" data-i18n="keepSessionHelp">Не запрашивать логин при следующем запуске</div></div>
+                        <label class="switch"><input type="checkbox" id="set-keep-session" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="minimizeToTray">Сворачивать в трей</h3><div class="setting-help" data-i18n="minimizeToTrayHelp">Прятать окно в область уведомлений</div></div>
+                        <label class="switch"><input type="checkbox" id="set-tray"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="notifications">Уведомления</h3><div class="setting-help" data-i18n="notificationsHelp">Сообщать о завершении инжекта и заданиях</div></div>
+                        <label class="switch"><input type="checkbox" id="set-notifications" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="autoUpdate">Автообновление</h3><div class="setting-help" data-i18n="autoUpdateHelp">Скачивать обновления автоматически</div></div>
+                        <label class="switch"><input type="checkbox" id="set-auto-update" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="updateChannel">Канал обновлений</h3>
+                        <select class="select-input" id="set-update-channel">
+                            <option value="stable" data-i18n="channelStable">Стабильный</option>
+                            <option value="beta" data-i18n="channelBeta">Бета</option>
+                        </select>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="logsDir">Папка логов</h3>
+                        <div class="setting-help" data-i18n="logsDirHelp">Куда сохранять файлы журнала</div>
+                        <input class="dir-input" id="set-logs-dir" type="text" data-i18n-placeholder="logsDirPlaceholder" placeholder="Путь для логов...">
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="hotkey">Горячая клавиша инжекта</h3>
+                        <input class="dir-input" id="set-hotkey" type="text" placeholder="Ctrl+Shift+I">
+                    </div>
+                </div>
+
+                <div class="settings-section" data-section="privacy">
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="telemetry">Сбор статистики</h3><div class="setting-help" data-i18n="telemetryHelp">Отправлять анонимные данные о сбоях</div></div>
+                        <label class="switch"><input type="checkbox" id="set-telemetry"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="hideOnline">Скрывать статус онлайн</h3><div class="setting-help" data-i18n="hideOnlineHelp">Не показывать другим, что вы в сети</div></div>
+                        <label class="switch"><input type="checkbox" id="set-hide-online"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="saveChat">Хранить историю чата</h3><div class="setting-help" data-i18n="saveChatHelp">Сохранять переписку с помощником</div></div>
+                        <label class="switch"><input type="checkbox" id="set-save-chat" checked><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-row-text"><h3 data-i18n="devtools">Режим разработчика</h3><div class="setting-help" data-i18n="devtoolsHelp">Расширенные логи и отладка</div></div>
+                        <label class="switch"><input type="checkbox" id="set-devtools"><span class="switch-slider"></span></label>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="proxy">Прокси-сервер</h3>
+                        <div class="setting-help" data-i18n="proxyHelp">Адрес вида host:port, пусто — без прокси</div>
+                        <input class="dir-input" id="set-proxy" type="text" placeholder="127.0.0.1:8080">
+                    </div>
+                </div>
+
+                <div class="settings-section" data-section="account">
+                    <div class="setting-block">
+                        <h3 data-i18n="accountProfile">Профиль</h3>
+                        <div class="setting-help" data-i18n="accountProfileHelp">Данные аккаунта, под которым выполнен вход в лаунчер</div>
+                        <div class="account-card">
+                            <img class="account-card-avatar" src="assets/emptyavatar.png" alt="avatar" data-avatar-fallback>
+                            <div class="account-card-main">
+                                <span class="account-card-name" id="account-card-name">Аккаунт</span>
+                                <span class="account-card-level" id="account-card-level">Уровень 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountLogin">Логин</h3>
+                        <div class="setting-help" data-i18n="accountLoginHelp">Имя, под которым выполнен вход</div>
+                        <input class="dir-input" id="set-account-login" type="text" readonly>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountProgress">Прогресс заданий</h3>
+                        <div class="setting-help" data-i18n="accountProgressHelp">Сколько заданий выполнено и сколько опыта накоплено</div>
+                        <div class="account-progress account-progress-wide">
+                            <div class="account-progress-bar">
+                                <div class="account-progress-fill" id="account-settings-progress-fill" style="width:0%"></div>
+                            </div>
+                            <span class="account-progress-label" id="account-settings-progress-label">0/5 заданий</span>
+                        </div>
+                        <div class="setting-help" id="account-xp-label">0 XP</div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountSession">Сессия</h3>
+                        <div class="setting-help" id="account-session-label">Нет данных о входе</div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountChangeLogin">Смена логина</h3>
+                        <div class="setting-help" data-i18n="accountChangeLoginHelp">Введите новый логин и текущий пароль для подтверждения</div>
+                        <div class="account-form">
+                            <input class="dir-input" id="set-new-login" type="text" data-i18n-placeholder="accountNewLoginPlaceholder" placeholder="Новый логин">
+                            <input class="dir-input" id="set-login-password" type="password" data-i18n-placeholder="accountCurrentPasswordPlaceholder" placeholder="Текущий пароль">
+                            <div class="account-form-row">
+                                <button class="primary-btn" id="account-login-save" type="button" data-i18n="accountSaveLogin">Сменить логин</button>
+                            </div>
+                            <div class="account-status" id="account-login-status"></div>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountChangePassword">Смена пароля</h3>
+                        <div class="setting-help" data-i18n="accountChangePasswordHelp">Код подтверждения будет отправлен на почту, указанную при регистрации</div>
+                        <div class="account-form">
+                            <input class="dir-input" id="set-current-password" type="password" data-i18n-placeholder="accountCurrentPasswordPlaceholder" placeholder="Текущий пароль">
+                            <input class="dir-input" id="set-new-password" type="password" data-i18n-placeholder="accountNewPasswordPlaceholder" placeholder="Новый пароль">
+                            <input class="dir-input" id="set-new-password-repeat" type="password" data-i18n-placeholder="accountRepeatPasswordPlaceholder" placeholder="Повторите новый пароль">
+                            <div class="account-form-row">
+                                <button class="primary-btn" id="account-password-request" type="button" data-i18n="accountSendCode">Отправить код на почту</button>
+                            </div>
+                            <div class="account-form-row account-code-row" id="account-code-row">
+                                <input class="dir-input" id="set-account-code" type="text" inputmode="numeric" maxlength="5" data-i18n-placeholder="accountCodePlaceholder" placeholder="Код из письма">
+                                <button class="primary-btn" id="account-code-confirm" type="button" data-i18n="accountConfirmCode">Подтвердить</button>
+                                <button class="secondary-btn" id="account-code-resend" type="button" data-i18n="accountResendCode">Отправить снова</button>
+                            </div>
+                            <div class="account-status" id="account-password-status"></div>
+                        </div>
+                    </div>
+                    <div class="setting-block">
+                        <h3 data-i18n="accountTokens">Игровые токены</h3>
+                        <div class="setting-help" data-i18n="accountTokensHelp">10 токенов = 1 минута игры. Заработайте их в мини-играх или докупите.</div>
+                        <div class="account-progress account-progress-wide">
+                            <span class="account-progress-label" id="account-tokens-label">0 токенов</span>
+                        </div>
+                        <div class="account-form-row">
+                            <button class="primary-btn" id="account-tokens-btn" type="button" data-i18n="accountOpenTokens">Мини-игры и токены</button>
+                        </div>
+                    </div>
+                    <div class="setting-block account-actions">
+                        <button class="secondary-btn" id="account-tasks-btn" type="button" data-i18n="accountOpenTasks">Открыть задания</button>
+                        <button class="secondary-btn account-logout-btn" id="account-logout-btn" type="button" data-i18n="logout">Выйти из аккаунта</button>
+                    </div>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <button class="primary-btn" id="settings-apply" type="button" data-i18n="apply">Применить</button>
+                <button class="secondary-btn" id="settings-reset" type="button" data-i18n="reset">Сбросить</button>
+            </div>
+        </aside>
+
+        <!-- Чат-панель -->
+        <aside class="chat-panel" id="chat-panel">
+            <div class="chat-head"><h2>DeepDick Chat</h2><button class="close-x" id="close-chat" type="button"><svg class="icon"><use href="#i-close"/></svg></button></div>
+            <div class="chat-body" id="chat-body"><div class="msg bot" data-i18n-html="chatGreeting">Привет! Я — DeepDick.<br>Чем могу помочь?</div></div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Напишите сообщение DeepDick...">
+                <button class="send-btn" id="send-chat" type="button"><img src="assets/send.png" alt="send"></button>
+            </div>
+        </aside>
+
+        <button class="chat-corner-btn" id="open-chat" type="button" data-i18n-title="chat" title="Чат">
+            <img src="assets/ai.png" alt="AI Chat">
+        </button>
+
+        <!-- Окно мини-игр: токены зарабатываются только в них -->
+        <div class="tokens-overlay" id="tokens-overlay" style="display: none;">
+            <div class="tokens-modal" role="dialog" aria-modal="true" aria-labelledby="tokens-modal-title">
+                <button class="close-x tokens-close" id="tokens-close" type="button"><svg class="icon"><use href="#i-close"/></svg></button>
+                <h2 id="tokens-modal-title" data-i18n="tokensTitle">Игровые токены</h2>
+                <p class="tokens-sub" data-i18n="tokensSubtitle">10 токенов = 1 минута игры с читом</p>
+
+                <div class="tokens-balance-box">
+                    <span class="tokens-balance-value" id="tokens-modal-balance">0</span>
+                    <span class="tokens-balance-caption" id="tokens-modal-caption">0 мин.</span>
+                </div>
+                <div class="tokens-hint" id="tokens-modal-hint"></div>
+
+                <h3 class="tokens-section-title" data-i18n="tokensEarnTitle">Заработать в мини-играх</h3>
+                <div class="tokens-games" id="tokens-games"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="eblox-bridge.js"></script>
+    <script src="eblox-pricing.js"></script>
+    <script src="eblox-tokens.js"></script>
+    <script src="eblox-avatar.js"></script>
+    <script src="eblox-select.js"></script>
+    <script src="main-page.js"></script>
+</body>
+</html>

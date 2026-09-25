@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кобукорм vs Дроны</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            user-select: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        #hud {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px;
+            background: rgba(0,0,0,0.75);
+            z-index: 10;
+            border-bottom: 2px solid #5C6176;
+        }
+        .hud-item { text-align: center; }
+        .hud-label { display: block; color: #888; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+        .hud-value { display: block; color: #fff; font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+        #score, #wave { color: #5C6176; }
+        #game-over {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.85); z-index: 20;
+        }
+        .game-over-card {
+            background: #fff; border: 4px solid #000; padding: 40px 60px;
+            text-align: center; box-shadow: 8px 8px 0 #000;
+        }
+        .game-over-card h2 { font-size: 32px; margin-bottom: 20px; color: #000; letter-spacing: 3px; }
+        .game-over-card p { font-size: 18px; margin: 8px 0; color: #333; }
+        #final-tokens { color: #1e3a8a; font-weight: bold; }
+        .game-over-actions { display: flex; gap: 12px; justify-content: center; }
+        #restart-btn, #exit-btn {
+            margin-top: 20px; padding: 12px 40px; background: #1e3a8a; color: #fff;
+            border: 3px solid #000; font-size: 18px; font-weight: bold; cursor: pointer;
+            letter-spacing: 2px; font-family: 'Courier New', monospace; transition: background 0.15s;
+        }
+        #restart-btn:hover { background: #152c6b; }
+        #exit-btn { background: #fff; color: #000; }
+        #exit-btn:hover { background: #e0e0e0; }
+        #instructions {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); padding: 8px 20px; z-index: 10;
+            color: #ccc; font-size: 12px; letter-spacing: 1px; text-align: center; pointer-events: none;
+        }
+        .hidden { display: none !important; }
+        #music-toggle {
+            position: absolute; bottom: 12px; right: 20px; z-index: 30;
+            background: rgba(0,0,0,0.7); color: #fff; border: 1px solid #555;
+            padding: 6px 12px; cursor: pointer; font-family: 'Courier New', monospace;
+            font-size: 12px; border-radius: 4px; transition: background 0.2s;
+        }
+        #music-toggle:hover { background: rgba(30,30,30,0.85); }
+        #music-toggle.muted { color: #888; border-color: #444; }
+        #level-indicator {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #5C6176; padding: 8px 24px;
+            border-radius: 20px; font-size: 18px; font-weight: bold; letter-spacing: 2px;
+            z-index: 15; border: 1px solid #5C6176; pointer-events: none;
+        }
+        #achievements-panel {
+            position: absolute; top: 120px; right: 20px; z-index: 25;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .achievement-popup {
+            background: rgba(0,0,0,0.9); color: #5C6176; padding: 10px 16px;
+            border-radius: 8px; border: 1px solid #5C6176; font-size: 13px;
+            animation: slideIn 0.5s ease, fadeOut 0.5s ease 3s forwards; white-space: nowrap;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        #heat-bar-container {
+            position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 16px; background: rgba(0,0,0,0.7); border-radius: 8px;
+            border: 1px solid #555; z-index: 10; display: none; overflow: hidden;
+        }
+        #heat-bar {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #4af, #f44);
+            border-radius: 8px; transition: width 0.1s;
+        }
+        #heat-label {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            color: #fff; font-size: 11px; font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="hud">
+            <div class="hud-item"><span class="hud-label">СЧЁТ</span><span class="hud-value" id="score">0</span></div>
+            <div class="hud-item"><span class="hud-label">ВОЛНА</span><span class="hud-value" id="wave">1</span></div>
+            <div class="hud-item"><span class="hud-label">ПАТРОНЫ</span><span class="hud-value" id="ammo">100 / ∞</span></div>
+            <div class="hud-item"><span class="hud-label">ЗДОРОВЬЕ</span><span class="hud-value" id="health">100%</span></div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="level-indicator">Уровень 1: Оборона базы</div>
+        <div id="achievements-panel"></div>
+        <div id="heat-bar-container"><span id="heat-label">НАГРЕВ</span><div id="heat-bar"></div></div>
+        <div id="game-over" class="hidden">
+            <div class="game-over-card">
+                <h2>ДРОНЫ ПРОРВАЛИСЬ</h2>
+                <p id="final-score">Счёт: 0</p>
+                <p id="final-wave">Волна: 1</p>
+                <p id="final-tokens">Токенов получено: +0</p>
+                <div class="game-over-actions">
+                    <button id="restart-btn">ЗАНОВО</button>
+                    <button id="exit-btn">В EBLOX</button>
+                </div>
+            </div>
+        </div>
+        <div id="instructions">
+            <p><strong>ЛКМ</strong> — стрельба | <strong>R</strong> — сменить оружие</p>
+            <p><strong>МЫШЬ</strong> — прицелиться | <strong id="exit-hint-key">ESC</strong> <span id="exit-hint-text">— выход в ebloX</span></p>
+        </div>
+        <button id="music-toggle" title="Вкл/Выкл музыку">🔇 МУЗЫКА</button>
+    </div>
+    <script src="../eblox-tokens.js"></script>
+    <script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const waveEl = document.getElementById('wave');
+const ammoEl = document.getElementById('ammo');
+const healthEl = document.getElementById('health');
+const gameOverDiv = document.getElementById('game-over');
+const finalScoreEl = document.getElementById('final-score');
+const finalWaveEl = document.getElementById('final-wave');
+const restartBtn = document.getElementById('restart-btn');
+const musicToggle = document.getElementById('music-toggle');
+const levelIndicator = document.getElementById('level-indicator');
+const achievementsPanel = document.getElementById('achievements-panel');
+const heatBarContainer = document.getElementById('heat-bar-container');
+const heatBar = document.getElementById('heat-bar');
+const finalTokensEl = document.getElementById('final-tokens');
+const exitBtn = document.getElementById('exit-btn');
+
+// ==========================================================
+// ТОКЕНЫ EBLOX
+// Игра открывается из лаунчера и начисляет игровые токены за очки.
+// Остальные тексты игры русские, поэтому переводим только эти.
+// ==========================================================
+const POINTS_PER_TOKEN = 300;
+
+const gameParams = new URLSearchParams(window.location.search);
+const gameLang = gameParams.get('lang') === 'en' ? 'en' : 'ru';
+const backUrl = gameParams.get('back') || '../main.html';
+
+const text = gameLang === 'en'
+    ? { tokens: 'Tokens earned: +', exit: 'TO EBLOX', exitHint: '— exit to ebloX' }
+    : { tokens: 'Токенов получено: +', exit: 'В EBLOX', exitHint: '— выход в ebloX' };
+
+exitBtn.textContent = text.exit;
+document.getElementById('exit-hint-text').textContent = text.exitHint;
+
+const tokenStore = window.EbloxTokens || null;
+let earnedTotal = 0;
+let runSettled = false;
+
+// Один расчёт за забег: и когда дроны прорвались, и когда игрок ушёл сам —
+// иначе выход по ESC на 20 тысячах очков не приносил бы ничего.
+function settleRun() {
+    if (runSettled) return 0;
+    runSettled = true;
+
+    const earned = tokenStore ? Math.floor(score / POINTS_PER_TOKEN) : 0;
+    if (earned > 0) {
+        tokenStore.earn(earned, 'kobukorm');
+        earnedTotal += earned;
+    }
+    return earned;
+}
+
+// Сумму за все забеги отдаём лаунчеру: он покажет уведомление.
+// В back уже может быть логин, поэтому разделитель выбираем по месту.
+function exitToLauncher() {
+    settleRun();
+    const separator = backUrl.indexOf('?') === -1 ? '?' : '&';
+    const query = earnedTotal > 0 ? `${separator}earnedTokens=${encodeURIComponent(earnedTotal)}` : '';
+    window.location.href = `${backUrl}${query}`;
+}
+
+exitBtn.addEventListener('click', exitToLauncher);
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape') exitToLauncher();
+});
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+canvas.width = W;
+canvas.height = H;
+
+window.addEventListener('resize', () => {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W; canvas.height = H;
+    blurCanvas.width = W; blurCanvas.height = H;
+});
+
+// MUSIC
+const bgMusic = new Audio('muzon.mp3');
+bgMusic.loop = true;
+bgMusic.volume = 0.4;
+let musicPlaying = false;
+
+function tryAutoPlayMusic() {
+    bgMusic.play().then(() => {
+        musicPlaying = true;
+        musicToggle.textContent = '🔊 МУЗЫКА';
+    }).catch(() => {
+        const start = () => {
+            bgMusic.play().then(() => { musicPlaying = true; musicToggle.textContent = '🔊 МУЗЫКА'; }).catch(() => {});
+            document.removeEventListener('click', start);
+            document.removeEventListener('keydown', start);
+        };
+        document.addEventListener('click', start);
+        document.addEventListener('keydown', start);
+    });
+}
+musicToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (musicPlaying) { bgMusic.pause(); musicPlaying = false; musicToggle.textContent = '🔇 МУЗЫКА'; }
+    else { bgMusic.play().then(() => { musicPlaying = true; musicToggle.textContent = '🔊 МУЗЫКА'; }).catch(() => {}); }
+});
+tryAutoPlayMusic();
+
+// ASSETS
+const bgImg = new Image(); bgImg.src = 'boss_background.jpg';
+const cityBgImg = new Image(); cityBgImg.src = 'zabroshenui_gorod.png';
+const bossBgImg = new Image(); bossBgImg.src = 'bossfight.jpg';
+const playerImg = new Image(); playerImg.src = 'kobukorm.png';
+const airGunImg = new Image(); airGunImg.src = 'kobukorm_vozduh.png';
+const droneImg = new Image(); droneImg.src = 'drynu.png';
+const zombieImg = new Image(); zombieImg.src = 'zombie.png';
+const rocketImg = new Image(); rocketImg.src = 'raketa.png';
+const bossStandImg = new Image(); bossStandImg.src = 'pturka_stout.png';
+const bossAttackImg = new Image(); bossAttackImg.src = 'pturka_ataka.png';
+
+// GAME STATE
+let score = 0, wave = 1, health = 100, ammo = 100;
+const maxAmmo = 100;
+let reloadTimer = 0;
+const reloadTime = 15;
+let gameRunning = true, currentLevel = 1, weaponMode = 'gun';
+let mouseX = W / 2, mouseY = H / 2, mouseDown = false;
+
+// Размеры игрока
+const playerW = 171, playerH = 357;
+let playerX = 200, playerY = H - playerH + 20;
+
+const zombieW = 148, zombieH = 240;
+let muzzleFlash = 0;
+
+// Воздушная пушка
+let airActive = false;
+let airHeat = 0;
+const airMaxHeat = 100;
+const airHeatPerFrame = 1.8;
+const airCoolPerFrame = 0.5;
+const airAmmoPerFrame = 0.4;
+let airCooldown = 0;
+const airMaxCooldown = 20;
+let airBeamParticles = [];
+
+const bullets = [];
+const bulletSpeed = 14, bulletSize = 5;
+
+const drones = [];
+const droneSpeedBase = 1.2;
+let droneSpawnTimer = 0, droneSpawnDelay = 90;
+
+const zombies = [];
+const zombieSpeedBase = 0.8;
+let zombieSpawnTimer = 0, zombieSpawnDelay = 120;
+
+const rockets = [];
+const rocketSpeedBase = 3.5;
+let rocketsThisWave = 0;
+const maxRocketsPerWave = 5;
+let rocketSpawnTimer = 0;
+const rocketSpawnDelay = 70;
+const rocketW = 120, rocketH = 32;
+
+const particles = [];
+let shakeAmount = 0, waveKills = 0;
+const killsPerWave = 10;
+
+let boss = null, bossActive = false, bossLasers = [];
+let bossMoveTimer = 0, bossDirX = 1, bossDirY = 1;
+
+const achievements = {
+    firstKill: { name: 'Первая кровь', desc: 'Убить первого врага', unlocked: false },
+    kill10: { name: 'Охотник', desc: 'Убить 10 врагов', unlocked: false },
+    kill50: { name: 'Истребитель', desc: 'Убить 50 врагов', unlocked: false },
+    wave5: { name: 'Ветеран', desc: 'Дойти до 5 волны', unlocked: false },
+    noDamageWave: { name: 'Неуязвимый', desc: 'Пройти волну без урона', unlocked: false },
+    airMaster: { name: 'Повелитель воздуха', desc: 'Сдуть 20 врагов воздушной пушкой', unlocked: false },
+    bossDefeated: { name: 'Укротитель попугаев', desc: 'Победить Птырку', unlocked: false }
+};
+let totalKills = 0, airKills = 0, waveDamageTaken = false;
+
+const blurCanvas = document.createElement('canvas');
+const blurCtx = blurCanvas.getContext('2d');
+blurCanvas.width = W; blurCanvas.height = H;
+
+const gunOffsetX = 102, gunOffsetY = -127;
+
+function unlockAchievement(key) {
+    if (achievements[key] && !achievements[key].unlocked) {
+        achievements[key].unlocked = true;
+        const popup = document.createElement('div');
+        popup.className = 'achievement-popup';
+        popup.innerHTML = `🏆 ${achievements[key].name}<br><small>${achievements[key].desc}</small>`;
+        achievementsPanel.appendChild(popup);
+        setTimeout(() => popup.remove(), 3500);
+    }
+}
+
+// INPUT
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = (e.clientX - rect.left) * (W / rect.width);
+    mouseY = (e.clientY - rect.top) * (H / rect.height);
+});
+canvas.addEventListener('mousedown', (e) => { if (e.button === 0) { mouseDown = true; e.preventDefault(); } });
+canvas.addEventListener('mouseup', (e) => { if (e.button === 0) mouseDown = false; });
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { mouseDown = true; e.preventDefault(); }
+    if (e.code === 'KeyR') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Только если игра запущена и нет кулдауна фена
+        if (gameRunning && airCooldown <= 0) {
+            weaponMode = weaponMode === 'gun' ? 'air' : 'gun';
+            // Сбрасываем нагрев при переключении
+            airHeat = 0;
+            airActive = false;
+            heatBarContainer.style.display = 'none';
+        }
+    }
+});
+document.addEventListener('keyup', (e) => { if (e.code === 'Space') mouseDown = false; });
+restartBtn.addEventListener('click', restartGame);
+
+// WEAPONS
+function shootGun() {
+    if (!gameRunning || ammo <= 0) return;
+    ammo--;
+    muzzleFlash = 6;
+    const gunX = playerX + gunOffsetX, gunY = playerY + playerH / 2 + gunOffsetY;
+    const dx = mouseX - gunX, dy = mouseY - gunY;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    bullets.push({ x: gunX, y: gunY, vx: (dx / dist) * bulletSpeed, vy: (dy / dist) * bulletSpeed });
+    shakeAmount = Math.max(shakeAmount, 3);
+}
+
+// ENEMIES
+function spawnDrone() {
+    const x = W + 30, y = 80 + Math.random() * (H - 160);
+    const tdx = playerX - x, tdy = (playerY + playerH / 2) - y;
+    const tdist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+    const speed = droneSpeedBase + wave * 0.3 + Math.random() * 0.6;
+    drones.push({ x, y, vx: (tdx / tdist) * speed, vy: (tdy / tdist) * speed, health: 1 + Math.floor(wave / 3), maxHealth: 1 + Math.floor(wave / 3), size: 68, wobble: Math.random() * Math.PI * 2, wobbleSpeed: 0.03 + Math.random() * 0.04 });
+}
+function spawnZombie() {
+    const x = W + 30, y = H - 180;
+    const tdx = playerX - x, tdy = (playerY + playerH / 2) - y;
+    const tdist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+    const speed = zombieSpeedBase + wave * 0.15;
+    zombies.push({ x, y, vx: (tdx / tdist) * speed, vy: (tdy / tdist) * speed, health: 3 + Math.floor(wave / 2), maxHealth: 3 + Math.floor(wave / 2), w: zombieW, h: zombieH, animTimer: 0 });
+}
+function spawnRocket() {
+    if (rocketsThisWave >= maxRocketsPerWave) return;
+    const y = 80 + Math.random() * (H - 200), x = W + 50;
+    const targetX = playerX + 40, targetY = playerY + playerH / 2;
+    const dx = targetX - x, dy = targetY - y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const speed = rocketSpeedBase + wave * 0.2;
+    rockets.push({ x, y, vx: (dx / dist) * speed, vy: (dy / dist) * speed, health: 3 + Math.floor(wave / 2), maxHealth: 3 + Math.floor(wave / 2), w: rocketW, h: rocketH });
+    rocketsThisWave++;
+}
+function spawnBoss() {
+    boss = { x: W - 300, y: H / 2, health: 60 + wave * 15, maxHealth: 60 + wave * 15, size: 100, state: 'idle', stateTimer: 0, attackCooldown: 0 };
+    bossActive = true;
+}
+function bossShootLaser() {
+    const tx = playerX + 40, ty = playerY + playerH / 2;
+    bossLasers.push({ x: boss.x - 25, y: boss.y - 25, vx: (tx - boss.x + 25) * 0.02, vy: (ty - boss.y + 25) * 0.02, life: 50 });
+}
+function spawnExplosion(x, y, count, big) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = big ? (3 + Math.random() * 6) : (1.5 + Math.random() * 4);
+        particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, decay: big ? (0.01 + Math.random() * 0.02) : (0.02 + Math.random() * 0.04), size: big ? (4 + Math.random() * 8) : (2 + Math.random() * 4), color: big ? (Math.random() < 0.5 ? '#ff4400' : '#ff8800') : (Math.random() < 0.5 ? '#ff6600' : '#ffaa00') });
+    }
+}
+
+// UPDATE
+function update() {
+    if (!gameRunning) return;
+
+        // В начале update() добавь:
+if (airCooldown > 0) {
+    airCooldown--;
+
+}
+
+    if (ammo < maxAmmo) {
+        reloadTimer++;
+        if (reloadTimer >= reloadTime) { reloadTimer = 0; ammo = Math.min(ammo + 3, maxAmmo); }
+    }
+
+    if (weaponMode === 'gun' && mouseDown && ammo > 0 && muzzleFlash <= 0) shootGun();
+    
+    // Воздушная пушка
+   if (airCooldown > 0) {
+    airCooldown--;
+    // Не даём стрелять пока кулдаун не закончится
+}
+
+if (weaponMode === 'air' && mouseDown && airHeat < airMaxHeat && ammo >= airAmmoPerFrame && airCooldown <= 0) {
+    airActive = true;
+    airHeat += airHeatPerFrame;
+    ammo -= airAmmoPerFrame;
+    heatBarContainer.style.display = 'block';
+    heatBar.style.width = (airHeat / airMaxHeat * 100) + '%';
+    
+    const gunX = playerX + 90, gunY = playerY + playerH / 2 - 60;
+    const dx = mouseX - gunX, dy = mouseY - gunY;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const dirX = dx / dist, dirY = dy / dist;
+    
+    for (let p = 0; p < 2; p++) {
+        const t = Math.random() * 350;
+        const spread = (Math.random() - 0.5) * 50;
+        airBeamParticles.push({
+            x: gunX + dirX * t + (-dirY) * spread,
+            y: gunY + dirY * t + (dirX) * spread,
+            life: 15 + Math.random() * 10,
+            vx: dirX * 2, vy: dirY * 2
+        });
+    }
+    
+    for (let d of drones) {
+        const ddx = d.x - gunX, ddy = d.y - gunY;
+        const proj = ddx * dirX + ddy * dirY;
+        const perp = Math.abs(-ddx * dirY + ddy * dirX);
+        if (proj > 0 && proj < 400 && perp < 60) {
+            const force = 0.8 * (1 - proj / 400);
+            d.vx += dirX * force; d.vy += dirY * force;
+            if (proj < 40) { d.health = 0; airKills++; }
+        }
+    }
+    for (let z of zombies) {
+        const ddx = z.x - gunX, ddy = z.y - gunY;
+        const proj = ddx * dirX + ddy * dirY;
+        const perp = Math.abs(-ddx * dirY + ddy * dirX);
+        if (proj > 0 && proj < 400 && perp < 60) {
+            const force = 0.6 * (1 - proj / 400);
+            z.vx += dirX * force; z.vy += dirY * force * 0.3;
+            if (proj < 40) { z.health = 0; airKills++; }
+        }
+    }
+    for (let r of rockets) {
+        const ddx = r.x - gunX, ddy = r.y - gunY;
+        const proj = ddx * dirX + ddy * dirY;
+        if (proj > 0 && proj < 400 && Math.abs(-ddx * dirY + ddy * dirX) < 80) {
+            r.vx += dirX * 0.5; r.vy += dirY * 0.5;
+        }
+    }
+    shakeAmount = Math.max(shakeAmount, 1);
+    
+    // Если перегрелся — включаем кулдаун
+    if (airHeat >= airMaxHeat) {
+        airHeat = airMaxHeat;
+        airCooldown = airMaxCooldown;
+        airActive = false;
+        heatBar.style.width = '100%';
+    }
+} else if (!mouseDown || weaponMode !== 'air') {
+    // Кнопка отпущена — запускаем остывание
+    airActive = false;
+    if (airHeat > 0 && airCooldown <= 0) {
+        airHeat -= airCoolPerFrame;
+        if (airHeat <= 0) {
+            airHeat = 0;
+            heatBarContainer.style.display = 'none';
+        }
+        heatBar.style.width = (airHeat / airMaxHeat * 100) + '%';
+        }
+    }
+    
+    for (let i = airBeamParticles.length - 1; i >= 0; i--) {
+        const p = airBeamParticles[i];
+        p.x += p.vx; p.y += p.vy; p.life--;
+        if (p.life <= 0) airBeamParticles.splice(i, 1);
+    }
+    
+    if (airKills >= 20) unlockAchievement('airMaster');
+
+    if (muzzleFlash > 0) muzzleFlash--;
+    if (shakeAmount > 0) shakeAmount *= 0.85;
+    if (shakeAmount < 0.1) shakeAmount = 0;
+
+    // Bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.x += b.vx; b.y += b.vy;
+        if (b.x < -20 || b.x > W + 20 || b.y < -20 || b.y > H + 20) { bullets.splice(i, 1); continue; }
+        let hit = false;
+        for (let j = drones.length - 1; j >= 0; j--) {
+            const d = drones[j];
+            if (Math.hypot(b.x - d.x, b.y - d.y) < d.size + bulletSize) {
+                d.health--; hit = true;
+                if (d.health <= 0) {
+                    spawnExplosion(d.x, d.y, 12, false);
+                    drones.splice(j, 1); score += 100 * wave; waveKills++; totalKills++;
+                    if (totalKills === 1) unlockAchievement('firstKill');
+                    if (totalKills >= 10) unlockAchievement('kill10');
+                    if (totalKills >= 50) unlockAchievement('kill50');
+                } else spawnExplosion(b.x, b.y, 3, false);
+                break;
+            }
+        }
+        if (!hit) for (let j = zombies.length - 1; j >= 0; j--) {
+            const z = zombies[j];
+            if (Math.hypot(b.x - z.x, b.y - z.y) < Math.max(z.w, z.h) / 3 + bulletSize) {
+                z.health--; hit = true;
+                if (z.health <= 0) {
+                    spawnExplosion(z.x, z.y, 10, false);
+                    zombies.splice(j, 1); score += 150 * wave; waveKills++; totalKills++;
+                    if (totalKills === 1) unlockAchievement('firstKill');
+                    if (totalKills >= 10) unlockAchievement('kill10');
+                    if (totalKills >= 50) unlockAchievement('kill50');
+                } else spawnExplosion(b.x, b.y, 3, false);
+                break;
+            }
+        }
+        if (!hit) for (let j = rockets.length - 1; j >= 0; j--) {
+            const r = rockets[j];
+            if (Math.hypot(b.x - r.x, b.y - r.y) < r.w / 3 + bulletSize) {
+                r.health--; hit = true;
+                if (r.health <= 0) {
+                    spawnExplosion(r.x, r.y, 30, true);
+                    for (let k = drones.length - 1; k >= 0; k--) if (Math.hypot(drones[k].x - r.x, drones[k].y - r.y) < 150) { spawnExplosion(drones[k].x, drones[k].y, 8, false); drones.splice(k, 1); score += 150 * wave; waveKills++; }
+                    for (let k = zombies.length - 1; k >= 0; k--) if (Math.hypot(zombies[k].x - r.x, zombies[k].y - r.y) < 150) { spawnExplosion(zombies[k].x, zombies[k].y, 8, false); zombies.splice(k, 1); score += 150 * wave; waveKills++; }
+                    rockets.splice(j, 1); score += 300 * wave; shakeAmount = 20;
+                } else spawnExplosion(b.x, b.y, 4, false);
+                break;
+            }
+        }
+        if (!hit && bossActive && boss && Math.hypot(b.x - boss.x, b.y - boss.y) < boss.size) {
+            boss.health--; hit = true; spawnExplosion(b.x, b.y, 3, false);
+            if (boss.health <= 0) { spawnExplosion(boss.x, boss.y, 40, true); score += 1000 * wave; boss = null; bossActive = false; unlockAchievement('bossDefeated'); nextLevel(); }
+        }
+        if (hit) bullets.splice(i, 1);
+    }
+
+    // Boss lasers
+    for (let i = bossLasers.length - 1; i >= 0; i--) {
+        const l = bossLasers[i];
+        l.x += l.vx; l.y += l.vy; l.life--;
+        if (l.life <= 0) { bossLasers.splice(i, 1); continue; }
+        if (Math.hypot(l.x - (playerX + 60), l.y - (playerY + playerH / 2)) < 60) {
+            health -= 5; shakeAmount = 4; spawnExplosion(l.x, l.y, 3, false); bossLasers.splice(i, 1); waveDamageTaken = true;
+            if (health <= 0) { health = 0; endGame(); return; }
+        }
+    }
+
+    // Drones
+    for (let i = drones.length - 1; i >= 0; i--) {
+        const d = drones[i];
+        d.wobble += d.wobbleSpeed;
+        const tdx = playerX - d.x, tdy = (playerY + playerH / 2) - d.y;
+        const tdist = Math.hypot(tdx, tdy) || 1;
+        d.vx += (tdx / tdist) * 0.03; d.vy += (tdy / tdist) * 0.03;
+        const spd = Math.hypot(d.vx, d.vy), maxSpd = droneSpeedBase + wave * 0.3 + 0.8;
+        if (spd > maxSpd) { d.vx = (d.vx / spd) * maxSpd; d.vy = (d.vy / spd) * maxSpd; }
+        d.x += d.vx + Math.sin(d.wobble) * 0.6; d.y += d.vy + Math.cos(d.wobble * 1.3) * 0.4;
+        d.y = Math.max(50, Math.min(H - 50, d.y));
+        if (d.x < playerX + 100 && d.x > playerX - 50 && Math.abs(d.y - (playerY + playerH / 2)) < 100) d.vx += 3;
+        if (Math.hypot(d.x - playerX, d.y - (playerY + playerH / 2)) < 120) {
+            health -= 25; shakeAmount = 12; waveDamageTaken = true; spawnExplosion(d.x, d.y, 18, false); drones.splice(i, 1);
+            if (health <= 0) { health = 0; endGame(); return; }
+        }
+    }
+
+    // Zombies
+    for (let i = zombies.length - 1; i >= 0; i--) {
+        const z = zombies[i]; z.animTimer++;
+        const tdx = playerX - z.x, tdy = (playerY + playerH / 2) - z.y;
+        const tdist = Math.hypot(tdx, tdy) || 1;
+        z.vx += (tdx / tdist) * 0.02; z.vy += (tdy / tdist) * 0.02;
+        const spd = Math.hypot(z.vx, z.vy), maxSpd = zombieSpeedBase + wave * 0.15;
+        if (spd > maxSpd) { z.vx = (z.vx / spd) * maxSpd; z.vy = (z.vy / spd) * maxSpd; }
+        z.x += z.vx; z.y += z.vy;
+        if (z.y > H - 120) { z.y = H - 120; z.vy = Math.min(z.vy, 0); }
+        if (z.y < 60) { z.y = 60; z.vy = Math.max(z.vy, 0); }
+        if (z.x < -50) z.x = -50;
+        if (z.x < playerX + 100 && z.x > playerX - 50 && Math.abs(z.y - (playerY + playerH / 2)) < 120) z.vx += 4;
+        if (Math.hypot(z.x - playerX, z.y - (playerY + playerH / 2)) < 100) {
+            health -= 30; shakeAmount = 14; waveDamageTaken = true; spawnExplosion(z.x, z.y, 14, false); zombies.splice(i, 1);
+            if (health <= 0) { health = 0; endGame(); return; }
+        }
+    }
+
+    // Rockets
+    for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.x += r.vx; r.y += r.vy;
+        if (r.x < -150 || r.y > H + 50 || r.y < -50) { rockets.splice(i, 1); continue; }
+        if (r.x < playerX + 120 && r.x > playerX - 50 && Math.abs(r.y - (playerY + playerH / 2)) < 100) r.vx += 5;
+        if (Math.hypot(r.x - (playerX + 40), r.y - (playerY + playerH / 2)) < 100) {
+            health -= 40; shakeAmount = 25; waveDamageTaken = true; spawnExplosion(r.x, r.y, 30, true);
+            for (let k = drones.length - 1; k >= 0; k--) if (Math.hypot(drones[k].x - r.x, drones[k].y - r.y) < 150) { spawnExplosion(drones[k].x, drones[k].y, 8, false); drones.splice(k, 1); score += 150 * wave; waveKills++; }
+            for (let k = zombies.length - 1; k >= 0; k--) if (Math.hypot(zombies[k].x - r.x, zombies[k].y - r.y) < 150) { spawnExplosion(zombies[k].x, zombies[k].y, 8, false); zombies.splice(k, 1); score += 150 * wave; waveKills++; }
+            rockets.splice(i, 1);
+            if (health <= 0) { health = 0; endGame(); return; }
+        }
+    }
+
+    // Boss AI
+    if (bossActive && boss) {
+        boss.stateTimer++; boss.attackCooldown--;
+        boss.x += bossDirX * 1.5; boss.y += bossDirY * 1.2;
+        if (boss.x > W - 100) bossDirX = -1; if (boss.x < 300) bossDirX = 1;
+        if (boss.y > H - 100) bossDirY = -1; if (boss.y < 100) bossDirY = 1;
+        bossMoveTimer++;
+        if (bossMoveTimer > 80) { bossMoveTimer = 0; bossDirX = (Math.random() - 0.5) * 2; bossDirY = (Math.random() - 0.5) * 2; }
+        if (boss.state === 'idle' && boss.stateTimer > 30) { boss.state = 'attack'; boss.stateTimer = 0; }
+        if (boss.state === 'attack') {
+            if (boss.attackCooldown <= 0) { bossShootLaser(); boss.attackCooldown = 40; }
+            if (boss.stateTimer > 60) { boss.state = 'idle'; boss.stateTimer = 0; }
+        }
+    }
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Spawn
+    droneSpawnTimer++;
+    if (droneSpawnTimer >= Math.max(25, droneSpawnDelay - wave * 6)) { droneSpawnTimer = 0; spawnDrone(); if (Math.random() < wave * 0.08) spawnDrone(); }
+    zombieSpawnTimer++;
+    if (currentLevel >= 2 && zombieSpawnTimer >= zombieSpawnDelay) { zombieSpawnTimer = 0; zombieSpawnDelay = 120 + Math.floor(Math.random() * 120); spawnZombie(); }
+    rocketSpawnTimer++;
+    if (rocketSpawnTimer >= rocketSpawnDelay && rocketsThisWave < maxRocketsPerWave) { rocketSpawnTimer = 0; spawnRocket(); }
+
+    // Wave complete
+    if (waveKills >= killsPerWave) {
+        waveKills = 0; wave++; rocketsThisWave = 0;
+        if (!waveDamageTaken && wave > 1) unlockAchievement('noDamageWave');
+        if (wave >= 5) unlockAchievement('wave5');
+        waveDamageTaken = false;
+        droneSpawnTimer = 0; zombieSpawnTimer = 0; rocketSpawnTimer = 0;
+        health = Math.min(100, health + 20);
+        if (wave === 6 && currentLevel === 1) nextLevel();
+        if (wave === 6 && currentLevel === 2) { currentLevel = 3; wave = 1; spawnBoss(); levelIndicator.textContent = 'Уровень 3: Битва с Птыркой'; }
+    }
+
+    scoreEl.textContent = score;
+    waveEl.textContent = wave;
+    ammoEl.textContent = Math.floor(ammo) + ' / ' + maxAmmo;
+    healthEl.textContent = Math.max(0, health) + '%';
+}
+
+function nextLevel() {
+    currentLevel++; wave = 1; waveKills = 0; rocketsThisWave = 0; waveDamageTaken = false;
+    drones.length = 0; zombies.length = 0; rockets.length = 0; bullets.length = 0;
+    bossLasers.length = 0; particles.length = 0; airBeamParticles.length = 0;
+    health = 100; airHeat = 0; airCooldown = 0; heatBarContainer.style.display = 'none';
+    if (currentLevel === 2) levelIndicator.textContent = 'Уровень 2: Заброшенный город';
+    if (currentLevel === 3) { levelIndicator.textContent = 'Уровень 3: Битва с Птыркой'; spawnBoss(); }
+}
+
+// DRAW
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const shakeX = (Math.random() - 0.5) * shakeAmount * 2, shakeY = (Math.random() - 0.5) * shakeAmount * 2;
+    ctx.save(); ctx.translate(shakeX, shakeY);
+
+    let bg = bgImg;
+    if (currentLevel === 2) bg = cityBgImg;
+    if (currentLevel === 3) bg = bossBgImg;
+    if (bg.complete && bg.naturalWidth > 0) ctx.drawImage(bg, 0, 0, W, H);
+    else { const grad = ctx.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, '#2c3e50'); grad.addColorStop(0.5, '#4a6741'); grad.addColorStop(1, '#1a2a1a'); ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H); }
+
+    blurCtx.clearRect(0, 0, W, H); blurCtx.drawImage(canvas, 0, 0, W, H);
+    ctx.save(); ctx.filter = 'blur(3px) brightness(0.7)'; ctx.drawImage(blurCanvas, 0, 0, W, H); ctx.restore();
+    if (bg.complete) { ctx.globalAlpha = 0.5; ctx.drawImage(bg, 0, 0, W, H); ctx.globalAlpha = 1; }
+
+// В draw(), где рисуется игрок:
+playerX = 200; playerY = H - playerH + 20;
+ctx.save();
+const useImg = weaponMode === 'air' ? airGunImg : playerImg;
+if (useImg.complete && useImg.naturalWidth > 0) {
+    ctx.translate(playerX, playerY); ctx.scale(-1, 1);
+    if (weaponMode === 'air') {
+        // Сохраняем пропорции фена: 326/897 = 0.3635
+        // Ширина как у пулемёта: 171, высота = 171 / (326/897) = 171 * 897/326 = 470
+        const airW = 130;
+        const airH = 350; // 171 * 897/326
+        ctx.drawImage(useImg, -airW / 2, 0, airW, airH);
+    } else {
+        ctx.drawImage(useImg, -playerW / 2, 0, playerW, playerH);
+    }
+}
+ctx.restore();
+
+    // HP bar
+    const hpBarX = playerX - 75, hpBarY = playerY - 30, hpBarW = 150, hpBarH = 15;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(hpBarX - 2, hpBarY - 2, hpBarW + 4, hpBarH + 4);
+    ctx.fillStyle = '#333'; ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+    const hpPct = health / 100;
+    ctx.fillStyle = hpPct > 0.5 ? '#4a4' : hpPct > 0.25 ? '#ca4' : '#c44';
+    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpPct, hpBarH);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px "Courier New"'; ctx.textAlign = 'center';
+    ctx.fillText('HP: ' + Math.max(0, health) + '%', playerX, hpBarY - 8);
+    ctx.fillText(weaponMode === 'air' ? 'ВОЗДУШНАЯ ПУШКА' : 'ПУЛЕМЁТ', playerX, hpBarY - 28);
+
+    // Вспышка
+    const gunX = playerX + gunOffsetX, gunY = playerY + playerH / 2 + gunOffsetY;
+    if (muzzleFlash > 0) {
+        const fa = muzzleFlash / 6;
+        ctx.fillStyle = 'rgba(255,200,50,' + fa + ')'; ctx.beginPath(); ctx.arc(gunX, gunY, 21, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,200,' + (fa * 0.8) + ')'; ctx.beginPath(); ctx.arc(gunX, gunY, 12, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Воздушный луч
+    if (airActive && weaponMode === 'air') {
+        const gunX = playerX + 90, gunY = playerY + playerH / 2 - 60;
+        const dx = mouseX - gunX, dy = mouseY - gunY;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const dirX = dx / dist, dirY = dy / dist;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#aaddff';
+        ctx.beginPath();
+        ctx.moveTo(gunX + (-dirY) * 15, gunY + (dirX) * 15);
+        ctx.lineTo(gunX + dirX * 350 + (-dirY) * 25, gunY + dirY * 350 + (dirX) * 25);
+        ctx.lineTo(gunX + dirX * 350 + (dirY) * 25, gunY + dirY * 350 + (-dirX) * 25);
+        ctx.lineTo(gunX + (dirY) * 15, gunY + (-dirX) * 15);
+        ctx.closePath(); ctx.fill();
+        
+        ctx.globalAlpha = 0.6;
+        ctx.strokeStyle = '#cceeff'; ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(gunX, gunY);
+            ctx.lineTo(gunX + dirX * 350 + (-dirY) * (i - 1) * 10, gunY + dirY * 350 + (dirX) * (i - 1) * 10);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // Частицы воздуха
+    for (let p of airBeamParticles) {
+        ctx.globalAlpha = p.life / 25;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Пули
+    ctx.fillStyle = '#ffcc00';
+    for (let b of bullets) {
+        ctx.fillRect(b.x - 3, b.y - 3, 7, 7);
+        ctx.fillStyle = 'rgba(255,200,50,0.4)'; ctx.fillRect(b.x - b.vx * 0.5 - 2, b.y - b.vy * 0.5 - 2, 12, 5);
+        ctx.fillStyle = '#ffcc00';
+    }
+
+    // Дроны
+    for (let d of drones) {
+        ctx.save(); ctx.translate(d.x, d.y);
+        if (droneImg.complete) { ctx.rotate(Math.sin(d.wobble) * 0.25); ctx.drawImage(droneImg, -d.size, -d.size, d.size * 2, d.size * 2); }
+        if (d.health < d.maxHealth) {
+            const bw = 75, bh = 8;
+            ctx.fillStyle = '#333'; ctx.fillRect(-bw / 2, -d.size - 18, bw, bh);
+            ctx.fillStyle = (d.health / d.maxHealth) > 0.5 ? '#4a4' : '#ca4';
+            ctx.fillRect(-bw / 2, -d.size - 18, bw * (d.health / d.maxHealth), bh);
+        }
+        ctx.restore();
+    }
+
+    // Зомби
+    for (let z of zombies) {
+        ctx.save(); ctx.translate(z.x, z.y);
+        if (zombieImg.complete) { const sway = Math.sin(z.animTimer * 0.05) * 3; ctx.translate(sway, 0); ctx.drawImage(zombieImg, -z.w / 2, -z.h / 2, z.w, z.h); }
+        if (z.health < z.maxHealth) {
+            const bw = z.w * 0.8, bh = 6;
+            ctx.fillStyle = '#333'; ctx.fillRect(-bw / 2, -z.h / 2 - 15, bw, bh);
+            ctx.fillStyle = (z.health / z.maxHealth) > 0.5 ? '#4a4' : '#ca4';
+            ctx.fillRect(-bw / 2, -z.h / 2 - 15, bw * (z.health / z.maxHealth), bh);
+        }
+        ctx.restore();
+    }
+
+    // Ракеты
+    for (let r of rockets) {
+        ctx.save(); ctx.translate(r.x, r.y);
+        const angle = Math.atan2(r.vy, r.vx); ctx.rotate(angle);
+        if (rocketImg.complete) ctx.drawImage(rocketImg, -r.h / 2, -r.h / 2, r.w, r.h);
+        const nozzleX = -r.w / 2 + 30;
+        const flameGrad = ctx.createRadialGradient(nozzleX, 0, 3, nozzleX, 0, 20);
+        flameGrad.addColorStop(0, 'rgba(255,255,100,0.9)'); flameGrad.addColorStop(0.3, 'rgba(255,150,0,0.7)');
+        flameGrad.addColorStop(0.7, 'rgba(255,50,0,0.3)'); flameGrad.addColorStop(1, 'rgba(255,0,0,0)');
+        ctx.fillStyle = flameGrad; ctx.beginPath(); ctx.arc(nozzleX - 6, 0, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    }
+
+    // Босс
+    if (bossActive && boss) {
+        ctx.save(); ctx.translate(boss.x, boss.y);
+        const bossImg = boss.state === 'attack' ? bossAttackImg : bossStandImg;
+        if (bossImg.complete) ctx.drawImage(bossImg, -boss.size, -boss.size, boss.size * 2, boss.size * 2);
+        const bhpW = 150, bhwH = 14;
+        ctx.fillStyle = '#333'; ctx.fillRect(-bhpW / 2, -boss.size - 30, bhpW, bhwH);
+        ctx.fillStyle = '#c44'; ctx.fillRect(-bhpW / 2, -boss.size - 30, bhpW * (boss.health / boss.maxHealth), bhwH);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Courier New"'; ctx.textAlign = 'center';
+        ctx.fillText('ПТЫРКА', 0, -boss.size - 38);
+        ctx.restore();
+        for (let l of bossLasers) {
+            ctx.strokeStyle = '#f00'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + l.vx * 5, l.y + l.vy * 5); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,0,0,0.8)'; ctx.beginPath(); ctx.arc(l.x, l.y, 5, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    // Частицы
+    for (let p of particles) { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Прицел
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    const cs = 24;
+    ctx.beginPath();
+    ctx.moveTo(mouseX - cs, mouseY); ctx.lineTo(mouseX - 8, mouseY);
+    ctx.moveTo(mouseX + 8, mouseY); ctx.lineTo(mouseX + cs, mouseY);
+    ctx.moveTo(mouseX, mouseY - cs); ctx.lineTo(mouseX, mouseY - 8);
+    ctx.moveTo(mouseX, mouseY + 8); ctx.lineTo(mouseX, mouseY + cs);
+    ctx.stroke();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(mouseX, mouseY, 4, 0, Math.PI * 2); ctx.stroke();
+}
+
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+function endGame() {
+    gameRunning = false;
+    finalScoreEl.textContent = 'Счёт: ' + score; finalWaveEl.textContent = 'Волна: ' + wave;
+    finalTokensEl.textContent = text.tokens + settleRun();
+    gameOverDiv.classList.remove('hidden');
+    if (musicPlaying) { bgMusic.pause(); musicPlaying = false; musicToggle.textContent = '🔇 МУЗЫКА'; }
+}
+
+function restartGame() {
+    score = 0; wave = 1; waveKills = 0; totalKills = 0; airKills = 0; rocketsThisWave = 0;
+    health = 100; ammo = maxAmmo; reloadTimer = 0; muzzleFlash = 0; shakeAmount = 0;
+    droneSpawnTimer = 0; zombieSpawnTimer = 0; rocketSpawnTimer = 0;
+    bullets.length = 0; drones.length = 0; zombies.length = 0; rockets.length = 0; particles.length = 0; airBeamParticles.length = 0;
+    bossLasers.length = 0; boss = null; bossActive = false;
+    currentLevel = 1; weaponMode = 'gun'; airHeat = 0; airCooldown = 0; airActive = false;
+    heatBarContainer.style.display = 'none';
+    levelIndicator.textContent = 'Уровень 1: Оборона базы';
+    waveDamageTaken = false;
+    Object.keys(achievements).forEach(k => achievements[k].unlocked = false);
+    achievementsPanel.innerHTML = '';
+    gameRunning = true; gameOverDiv.classList.add('hidden');
+    runSettled = false;
+    scoreEl.textContent = '0'; waveEl.textContent = '1';
+    ammoEl.textContent = maxAmmo + ' / ' + maxAmmo; healthEl.textContent = '100%';
+    if (!musicPlaying) tryAutoPlayMusic();
+}
+
+scoreEl.textContent = '0'; waveEl.textContent = '1';
+ammoEl.textContent = maxAmmo + ' / ' + maxAmmo; healthEl.textContent = '100%';
+gameLoop();
+    </script>
+</body>
+</html>

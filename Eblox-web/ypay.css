@@ -1,0 +1,752 @@
+/* ==========================================================
+   ЫPay — платёжная страница ebloX
+   Стиль: Exaggerated Minimalism / паттерн Trust & Authority
+   Тёмная "сейфовая" палитра + безопасный зелёный акцент
+   ========================================================== */
+
+:root {
+    --pay-bg: #0F172A;
+    --pay-surface: #10192E;
+    --pay-surface-raised: #16213C;
+    --pay-primary: #1E3A5F;
+    --pay-secondary: #334155;
+    --pay-accent: #059669;
+    --pay-accent-hover: #047857;
+    --pay-accent-soft: rgba(5, 150, 105, 0.12);
+    --pay-accent-text: #34D399;
+    --pay-fg: #FFFFFF;
+    --pay-fg-muted: #94A3B8;
+    --pay-fg-dim: #64748B;
+    --pay-border: rgba(255, 255, 255, 0.08);
+    --pay-border-strong: rgba(255, 255, 255, 0.16);
+    --pay-danger: #DC2626;
+    --pay-danger-text: #F87171;
+    --pay-radius: 14px;
+    --pay-radius-sm: 10px;
+    --pay-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    background: var(--pay-bg);
+    color: var(--pay-fg);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+}
+
+button,
+input {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+:focus-visible {
+    outline: 2px solid var(--pay-accent);
+    outline-offset: 2px;
+}
+
+.pay-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    background:
+        radial-gradient(900px 500px at 12% -8%, rgba(30, 58, 95, 0.55), transparent 62%),
+        radial-gradient(700px 420px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 60%),
+        var(--pay-bg);
+}
+
+/* ---------- Шапка окна ebloX (та же, что в лаунчере) ---------- */
+.titlebar {
+    position: relative;
+    z-index: 20;
+    flex: 0 0 auto;
+    height: 32px;
+    padding: 0 10px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(6, 10, 16, 0.72);
+    border-bottom: 1px solid var(--pay-border);
+    -webkit-app-region: drag;
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.brand img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.brand-name {
+    font-size: 12px;
+    color: #fff;
+}
+
+.brand-version {
+    font-size: 11px;
+    color: #4a536d;
+    margin-left: 2px;
+}
+
+.window-controls {
+    display: flex;
+    -webkit-app-region: no-drag;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 32px;
+}
+
+.win-btn {
+    width: 46px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #cfd6e8;
+    font-size: 12px;
+    transition: background 0.2s var(--pay-ease);
+}
+
+.win-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.win-close:hover {
+    background: #e81123;
+    color: #fff;
+}
+
+/* ---------- Контент ---------- */
+.pay-content {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 32px 36px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.pay-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pay-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+}
+
+.pay-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.pay-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 18px 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--pay-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--pay-fg-muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s var(--pay-ease),
+                background 0.2s var(--pay-ease),
+                border-color 0.2s var(--pay-ease);
+}
+
+.pay-back:hover {
+    color: var(--pay-fg);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--pay-border-strong);
+}
+
+.pay-back-arrow {
+    font-size: 16px;
+    line-height: 1;
+    transition: transform 0.2s var(--pay-ease);
+}
+
+.pay-back:hover .pay-back-arrow {
+    transform: translateX(-3px);
+}
+
+.pay-processor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pay-processor-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.pay-processor-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.pay-processor-sub {
+    font-size: 12px;
+    color: var(--pay-fg-dim);
+}
+
+.ypay-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--pay-primary);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--pay-fg);
+    font-weight: 700;
+    font-size: 17px;
+    flex: 0 0 auto;
+}
+
+.pay-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 20px;
+    align-items: start;
+}
+
+/* ---------- Заказ ---------- */
+.order-card,
+.card-form {
+    background: var(--pay-surface);
+    border: 1px solid var(--pay-border);
+    border-radius: var(--pay-radius);
+    padding: 26px 26px 24px;
+}
+
+.order-title,
+.form-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pay-fg-dim);
+    margin-bottom: 18px;
+}
+
+/* Крупная сумма над сгибом — паттерн Trust & Authority */
+.order-total-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 22px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--pay-border);
+}
+
+.order-total-label {
+    font-size: 13px;
+    color: var(--pay-fg-muted);
+}
+
+.order-total-value {
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.order-total-period {
+    font-size: 13px;
+    color: var(--pay-fg-dim);
+}
+
+.order-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+}
+
+.order-row:last-child {
+    border-bottom: none;
+}
+
+.order-row dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--pay-fg-muted);
+}
+
+.order-row dd {
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.order-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--pay-accent-soft);
+    border: 1px solid rgba(5, 150, 105, 0.35);
+    color: var(--pay-accent-text);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.order-row-discount dd {
+    color: var(--pay-accent-text);
+}
+
+.order-note {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: var(--pay-radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--pay-fg-muted);
+}
+
+.order-trust {
+    list-style: none;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.order-trust li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--pay-fg-muted);
+}
+
+.order-trust-mark {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--pay-accent-soft);
+    color: var(--pay-accent-text);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* ---------- Превью карты ---------- */
+.bank-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--pay-radius);
+    border: 1px solid var(--pay-border-strong);
+    background: linear-gradient(135deg, #1E3A5F 0%, #16213C 55%, #101B31 100%);
+    padding: 20px 22px 18px;
+    margin-bottom: 24px;
+    min-height: 172px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.bank-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -30% -60% auto;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+.bank-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.bank-card-chip {
+    width: 38px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(140deg, #E2C275 0%, #C9A24B 48%, #EBD69B 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.bank-card-type {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.bank-card-number {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    font-variant-numeric: tabular-nums;
+    margin: 18px 0 16px;
+}
+
+.bank-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.bank-card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 3px;
+}
+
+.bank-card-value {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 190px;
+}
+
+/* ---------- Форма ---------- */
+.field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pay-fg-muted);
+    margin-bottom: 7px;
+}
+
+.field input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--pay-border-strong);
+    border-radius: var(--pay-radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--pay-fg);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    transition: border-color 0.2s var(--pay-ease),
+                background 0.2s var(--pay-ease),
+                box-shadow 0.2s var(--pay-ease);
+}
+
+.field input::placeholder {
+    color: var(--pay-fg-dim);
+    letter-spacing: 0.04em;
+}
+
+.field input:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.field input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--pay-accent);
+    box-shadow: 0 0 0 3px var(--pay-accent-soft);
+}
+
+.field input.invalid {
+    border-color: var(--pay-danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.field-help {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--pay-fg-dim);
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.pay-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 20px;
+    margin: 2px 0 14px;
+    font-size: 13px;
+    color: var(--pay-danger-text);
+}
+
+.pay-error:not(:empty)::before {
+    content: "!";
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(220, 38, 38, 0.18);
+    color: var(--pay-danger-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pay-submit {
+    width: 100%;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: var(--pay-radius-sm);
+    background: var(--pay-accent);
+    color: var(--pay-fg);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: background 0.2s var(--pay-ease),
+                transform 0.15s var(--pay-ease),
+                box-shadow 0.2s var(--pay-ease);
+}
+
+.pay-submit:hover:not(:disabled) {
+    background: var(--pay-accent-hover);
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.pay-submit:active:not(:disabled) {
+    transform: scale(0.985);
+}
+
+.pay-submit:disabled {
+    background: var(--pay-secondary);
+    color: var(--pay-fg-dim);
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+.pay-submit-lock {
+    flex: 0 0 auto;
+    opacity: 0.9;
+}
+
+.pay-submit-sum {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pay-secure {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--pay-fg-dim);
+}
+
+/* ---------- Обработка платежа ---------- */
+.pay-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(8, 13, 26, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.pay-overlay.show {
+    display: flex;
+    animation: payFade 0.2s var(--pay-ease);
+}
+
+@keyframes payFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.pay-modal {
+    background: var(--pay-surface-raised);
+    border: 1px solid var(--pay-border-strong);
+    border-radius: var(--pay-radius);
+    padding: 34px 38px;
+    min-width: 320px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    animation: payRise 0.26s var(--pay-ease);
+}
+
+@keyframes payRise {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.pay-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 18px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: var(--pay-accent);
+    border-radius: 50%;
+    animation: paySpin 0.85s linear infinite;
+}
+
+@keyframes paySpin {
+    to { transform: rotate(360deg); }
+}
+
+.pay-check {
+    display: none;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 18px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--pay-accent-soft);
+    border: 1px solid rgba(5, 150, 105, 0.4);
+    color: var(--pay-accent-text);
+    font-size: 24px;
+    line-height: 1;
+}
+
+.pay-modal.success .pay-spinner {
+    display: none;
+}
+
+.pay-modal.success .pay-check {
+    display: flex;
+    animation: payPop 0.35s var(--pay-ease);
+}
+
+@keyframes payPop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+.pay-status {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.pay-status-sub {
+    margin-top: 7px;
+    font-size: 13px;
+    color: var(--pay-fg-muted);
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 900px) {
+    .pay-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pay-content {
+        padding: 22px 20px 30px;
+    }
+
+    .order-total-value {
+        font-size: 38px;
+    }
+}
+
+@media (max-width: 560px) {
+    .pay-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .order-card,
+    .card-form {
+        padding: 20px 18px;
+    }
+
+    .field-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

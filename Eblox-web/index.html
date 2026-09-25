@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>ebloX</title>
+</head>
+<body>
+    <!-- КАСТОМНЫЙ ТАЙТЛБАР -->
+    <header class="titlebar">
+    <div class="brand">
+        <img src="assets/logo.png" alt="ebloX">
+        <span class="brand-name">ebloX</span>
+        <span class="brand-version">v 2.1.1.3</span>
+    </div>
+
+    <div class="window-controls">
+        <button class="win-btn" id="auth-lang-btn" type="button" title="Language">RU</button>
+        <button class="win-btn" id="btn-minimize" title="Свернуть">—</button>
+        <button class="win-btn" id="btn-maximize" title="Развернуть">▢</button>
+        <button class="win-btn win-close" id="btn-close-app" title="Закрыть">✕</button>
+    </div>
+</header>
+
+    <!-- ПАСХАЛКА "Э" -->
+    <div id="easter-egg-overlay" style="display: none;">
+        <div class="easter-modal">
+            <p>а кто это ваще?</p>
+            <button id="close-easter-btn">Ок</button>
+        </div>
+    </div>
+
+    <!-- УНИВЕРСАЛЬНОЕ ВНУТРЕННЕЕ СООБЩЕНИЕ -->
+    <div id="message-overlay" style="display: none;">
+        <div class="message-modal">
+            <p id="message-text"></p>
+            <button id="message-ok-btn">Ок</button>
+        </div>
+    </div>
+
+    <!-- ПЛАШКА О VPN: ТАЙМАУТ ОТПРАВКИ ПИСЬМА -->
+    <div id="vpn-overlay" style="display: none;">
+        <div class="vpn-modal" role="alertdialog" aria-modal="true" aria-labelledby="vpn-title" aria-describedby="vpn-text">
+            <div class="vpn-icon" aria-hidden="true">!</div>
+            <h3 id="vpn-title">Включите VPN</h3>
+            <p id="vpn-text">Письмо не удалось отправить за 30 секунд. Скорее всего, доступ к почтовому сервису закрыт провайдером — включите VPN и попробуйте ещё раз.</p>
+            <button id="vpn-retry-btn" class="btn-continue btn-modal-narrow">Отправить ещё раз</button>
+            <button id="vpn-close-btn" class="vpn-close">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
+<div id="modal-overlay" style="display: none;">
+    <div class="verify-modal">
+        <!-- БЛОК ЗАГРУЗКИ -->
+        <div id="modal-loader" class="loader-container">
+            <div class="spinner"></div>
+            <p class="loader-text">Отправка кода на вашу почту...</p>
+        </div>
+
+        <!-- БЛОК ВВОДА КОДА -->
+        <div id="modal-content-body" style="display: none;">
+            <img src="assets/logo.png" alt="ebloX" class="modal-logo">
+            <h2>Подтвердите вашу почту</h2>
+            <div class="code-inputs">
+                <input type="text" maxlength="1" class="c-box" placeholder="0">
+                <input type="text" maxlength="1" class="c-box" placeholder="0">
+                <input type="text" maxlength="1" class="c-box" placeholder="0">
+                <input type="text" maxlength="1" class="c-box" placeholder="0">
+                <input type="text" maxlength="1" class="c-box" placeholder="0">
+            </div>
+            <p class="modal-sub">Код был отправлен по почте, которую вы указали</p>
+            <button class="btn-continue btn-modal-narrow" id="btn-verify-confirm">Продолжить</button>
+            <a href="#" class="resend-link" id="btn-resend-code">Отправить код ещё раз</a>
+        </div>
+    </div>
+</div>
+
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
+    <div class="container" id="main-content">
+        <!-- ЛЕВАЯ ЧАСТЬ -->
+        <section class="auth-section">
+            <div class="auth-content">
+                <img src="assets/logo.png" class="form-logo">
+                
+                <div class="views-container">
+                    <!-- 1. ВХОД -->
+                    <div id="view-login" class="auth-view active">
+                        <h1>Авторизация</h1>
+                        <div class="input-group" id="login-input-group">
+                            <img src="assets/profile.png" class="input-icon">
+                            <input type="text" id="login-username" placeholder="Логин">
+                        </div>
+                        <p class="error-text" id="login-error-text" style="display: none;"></p>
+
+                        <div class="input-group">
+                            <img src="assets/zamok.png" class="input-icon">
+                            <input type="password" id="login-password" placeholder="Пароль">
+                            <img src="assets/visible.png" class="eye-toggle">
+                        </div>
+                        
+                        <label class="remember-row">
+                            <input type="checkbox" id="login-remember" checked>
+                            <span id="login-remember-text">Запомнить меня</span>
+                        </label>
+
+                        <button class="btn-continue" id="login-button">Продолжить</button>
+                        
+                        <div class="footer-links">
+                            <a href="#" id="to-register-link">У меня нет аккаунта</a>
+                            <a href="#" id="to-forgot-link">Забыл пароль</a>
+                            <a href="#" class="lang-btn" id="easter-egg-btn">э</a>
+                        </div>
+                    </div>
+
+                    <!-- 2. РЕГИСТРАЦИЯ -->
+                    <div id="view-register" class="auth-view" style="display: none;">
+                        <h1>Регистрация</h1>
+                        
+                        <div class="input-group" id="reg-group-login">
+                            <img src="assets/profile.png" class="input-icon">
+                            <input type="text" id="reg-username" placeholder="Логин">
+                        </div>
+                        <p class="error-text" id="reg-error-login" style="display: none;"></p>
+
+                        <div class="input-group" id="reg-group-email">
+                            <img src="assets/email.png" class="input-icon">
+                            <input type="email" id="reg-email" placeholder="Email">
+                        </div>
+                        <p class="error-text" id="reg-error-email" style="display: none;"></p>
+
+                        <div class="input-group">
+                            <img src="assets/zamok.png" class="input-icon">
+                            <input type="password" id="reg-password" placeholder="••••••">
+                            <img src="assets/invisible.png" class="eye-toggle">
+                        </div>
+                        
+                        <button class="btn-continue" id="register-button">Продолжить</button>
+                        
+                        <div class="footer-links">
+                            <a href="#" id="back-to-login-1">У меня есть аккаунт</a>
+                        </div>
+                    </div>
+
+                    <!-- 3. ВОССТАНОВЛЕНИЕ -->
+                    <div id="view-forgot" class="auth-view" style="display: none;">
+                        <h1>Восстановление</h1>
+                        <p class="form-subtitle" style="font-size: 13px; color: #404A5E; margin-bottom: 20px;">
+                            Введите логин и почту аккаунта для получения кода
+                        </p>
+                        
+                        <div class="input-group">
+                            <img src="assets/profile.png" class="input-icon">
+                            <input type="text" id="forgot-username" placeholder="Логин">
+                        </div>
+
+                        <div class="input-group">
+                            <img src="assets/email.png" class="input-icon">
+                            <input type="email" id="forgot-email" placeholder="Email">
+                        </div>
+                        <p class="error-text" id="forgot-error-text" style="display: none;"></p>
+                        
+                        <button class="btn-continue" id="forgot-button">Получить код</button>
+                        
+                        <div class="footer-links">
+                            <a href="#" id="back-to-login-2">Назад</a>
+                        </div>
+                    </div>
+
+                    <!-- 4. НОВЫЙ ПАРОЛЬ -->
+                    <div id="view-new-password" class="auth-view" style="display: none;">
+                        <h1>Новый пароль</h1>
+                        <div class="input-group">
+                            <img src="assets/zamok.png" class="input-icon">
+                            <input type="password" id="reset-new-password" placeholder="Придумайте пароль">
+                            <img src="assets/invisible.png" class="eye-toggle">
+                        </div>
+                        <button class="btn-continue" id="save-password-button">Сменить пароль</button>
+                    </div>
+                </div>
+
+                <p class="disclaimer">
+                    © 2026 ebloX связана с компание Roblox, и лично ебала его создателя в сраку. Все коммерческие транзакции от ныне принадлежат только ebloX. ахахха ваши все робуксы теперь у меня лохи.
+                </p>
+            </div>
+        </section>
+
+        <!-- ПРАВАЯ ЧАСТЬ -->
+        <section class="image-section">
+            <div class="image-card" style="background-image: url('assets/image.png');">
+                <div class="online-badge">
+                    <span class="dot"></span> 826 используют
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="eblox-bridge.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>

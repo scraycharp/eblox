@@ -1,0 +1,5 @@
+{
+    "apiUrl": "https://agentrouter.org/v1/chat/completions",
+    "apiKey": "sk-GX46CwMtUg7zdkgPUerQ8go0QpI3hYA8bFHMChMWrt4AAHuE",
+    "model": "claude-opus-4-8"
+}

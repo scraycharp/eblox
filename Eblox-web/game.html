@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <title>Vanity KeyGen</title>
+    <style>
+        @font-face {
+            font-family: 'ALS Collimator';
+            src: url('vanity_font.ttf') format('truetype');
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; font-family: 'ALS Collimator', monospace; }
+        body { background-image: url('vanity_bg.png'); background-size: cover; background-position: center; color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .glass { background: rgba(30, 30, 30, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 2px solid rgba(255, 255, 255, 0.8); border-radius: 0; }
+        
+        #titlebar { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.5); font-size: 18px; z-index: 1000; }
+        #close-btn { cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        .content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 40px; z-index: 10; }
+        input[type="text"] { width: 80%; max-width: 600px; padding: 20px; font-size: 18px; color: #aaa; text-align: left; outline: none; border-radius: 0; transition: color 0.3s; }
+        .instruction { text-align: center; font-size: 22px; line-height: 1.5; text-shadow: 0 0 5px black; }
+        button.main-btn { padding: 15px 60px; font-size: 18px; color: white; cursor: pointer; transition: background 0.3s; border-radius: 0; }
+        button.main-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* === КАПЧА === */
+        #captcha-modal { display: none; position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .captcha-container { background: #ffffff; color: #333; width: 380px; padding: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: Arial, sans-serif; border-radius: 0; }
+        .captcha-header { background: #4a90e2; color: white; padding: 15px; margin-bottom: 8px; font-size: 14px; }
+        .captcha-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .captcha-header strong { display: block; font-size: 26px; margin: 0; font-weight: bold; }
+        .captcha-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .captcha-tile { aspect-ratio: 1 / 1; background-color: #eee; background-size: cover; background-position: center; cursor: pointer; position: relative; transition: transform 0.1s; }
+        .captcha-tile:active { transform: scale(0.96); }
+        .captcha-tile.selected { transform: scale(0.90); border: 4px solid #4a90e2; }
+        .captcha-tile.selected::after { content: ''; position: absolute; top: -6px; right: -6px; background-color: #4a90e2; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='square'><polyline points='20 6 9 17 4 12'></polyline></svg>"); background-size: 16px 16px; background-repeat: no-repeat; background-position: center; width: 24px; height: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 2; border-radius: 0; }
+        .captcha-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 5px; border-top: 1px solid #ddd; padding-top: 15px; }
+        .captcha-verify-btn { background: #4a90e2; color: white; border: none; padding: 10px 25px; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 0; }
+        .captcha-verify-btn:hover { background: #357abd; }
+        .captcha-refresh { cursor: pointer; color: #888; display: flex; align-items: center; justify-content: center; }
+        .captcha-refresh:hover { color: #333; }
+
+        /* === ИГРА === */
+        #game-wrapper { display: none; position: absolute; top: 40px; left: 0; width: 100vw; height: calc(100vh - 40px); background: #000; z-index: 200; cursor: crosshair; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 12px 20px; background: rgba(0,0,0,0.75); border-bottom: 2px solid #5C6176; }
+        .hud-item { text-align: center; }
+        .hud-label { display: block; color: #888; font-size: 11px; letter-spacing: 2px; }
+        .hud-value { display: block; color: #fff; font-size: 22px; font-weight: bold; }
+        #game-over { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; justify-content: center; align-items: center; background: rgba(0,0,0,0.85); z-index: 20; }
+        .game-over-card { background: #fff; border: 4px solid #000; padding: 40px 60px; text-align: center; box-shadow: 8px 8px 0 #000; }
+        .game-over-card h2 { font-size: 32px; margin-bottom: 20px; color: #000; }
+        .game-over-card p { font-size: 18px; margin: 8px 0; color: #333; }
+        #restart-btn { margin-top: 20px; padding: 12px 40px; background: #000; color: #fff; border: 2px solid #5C6176; font-size: 18px; cursor: pointer; transition: background 0.15s; }
+        #restart-btn:hover { background: #333; }
+        #instructions { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 8px 20px; color: #ccc; font-size: 14px; text-align: center; pointer-events: none; border: 1px solid #555; }
+        #level-indicator { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #5C6176; padding: 8px 24px; border: 1px solid #5C6176; font-size: 18px; font-weight: bold; pointer-events: none; }
+        #heat-bar-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 300px; height: 16px; background: rgba(0,0,0,0.7); border: 1px solid #555; display: none; overflow: hidden; }
+        #heat-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #4af, #f44); transition: width 0.1s; }
+        #heat-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+    <div id="titlebar" class="glass" onmousedown="dragWindow()">
+        <span>Vanity</span>
+        <div id="close-btn" onclick="closeWindow()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="square"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+    </div>
+
+    <div class="content" id="main-content">
+        <input type="text" id="keyBox" class="glass" value="Тут будет ключ активации..." readonly />
+        <div class="instruction">Пройдите все этапы защиты,<br>чтобы получить ключ<br>активации от Windows 10</div>
+        <button class="glass main-btn" onclick="startCaptchaSequence()">Получить ключ</button>
+    </div>
+
+    <!-- КАПЧА -->
+    <div id="captcha-modal">
+        <div class="captcha-container">
+            <div class="captcha-header">
+                <div class="captcha-header-top"><span>Выберите все изображения, где есть</span><span id="captcha-step-info" style="font-weight:bold; background:rgba(0,0,0,0.2); padding: 2px 6px;">Шаг 1 из 5</span></div>
+                <strong id="captcha-target-text">Автомобили</strong>
+            </div>
+            <div class="captcha-grid" id="captcha-grid"></div>
+            <div class="captcha-footer">
+                <div class="captcha-refresh" onclick="refreshCurrentTask()" title="Обновить картинки">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="17 1 23 7 17 13"></polyline><polyline points="23 7 11 7 11 17 3 17"></polyline></svg>
+                </div>
+                <button class="captcha-verify-btn" onclick="verifyCaptcha()">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ИГРА -->
+    <div id="game-wrapper">
+        <div id="hud">
+            <div class="hud-item"><span class="hud-label">СЧЁТ</span><span class="hud-value" id="g-score">0</span></div>
+            <div class="hud-item"><span class="hud-label">ВОЛНА</span><span class="hud-value" id="g-wave">1</span></div>
+            <div class="hud-item"><span class="hud-label">ПАТРОНЫ</span><span class="hud-value" id="g-ammo">100 / ∞</span></div>
+            <div class="hud-item"><span class="hud-label">ЗДОРОВЬЕ</span><span class="hud-value" id="g-health">100%</span></div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="level-indicator">Уровень 1: Оборона базы</div>
+        <div id="heat-bar-container"><span id="heat-label">НАГРЕВ</span><div id="heat-bar"></div></div>
+        
+        <div id="game-over">
+            <div class="game-over-card">
+                <h2>БАЗА УНИЧТОЖЕНА</h2>
+                <p id="final-score">Счёт: 0</p>
+                <p id="final-wave">Волна: 1</p>
+                <button id="restart-btn" onclick="window.restartMinigame()">ЗАНОВО</button>
+            </div>
+        </div>
+        
+        <div id="instructions">
+            ПОБЕДИ БОССА, ЧТОБЫ ПОЛУЧИТЬ КЛЮЧ<br><br>
+            <strong>ЛКМ</strong> — стрельба | <strong>R</strong> — сменить оружие | <strong>МЫШЬ</strong> — прицел
+        </div>
+    </div>
+
+    <script>
+        function closeWindow() { window.chrome.webview.postMessage('close'); }
+        function dragWindow() { window.chrome.webview.postMessage('drag'); }
+
+        // --- ЛОГИКА КАПЧИ ---
+        const targetCategories = {
+            "автомобили": ["car1.jpg", "car2.jpg", "car3.jpg"], "светофоры": ["traffic_light1.jpg", "traffic_light2.jpg", "traffic_light3.jpg"],
+            "велосипеды": ["bicycle1.jpg", "bicycle2.jpg", "bicycle3.jpg"], "коты": ["cat1.jpg", "cat2.jpg", "cat3.jpg"],
+            "планеты": ["planets1.jpg", "planets2.jpg", "planets3.jpg"]
+        };
+        const otherImages = ["other1.jpg", "other2.jpg", "other3.jpg", "other4.jpg", "other5.jpg", "other6.jpg", "other7.jpg", "other8.jpg", "other9.jpg", "other10.jpg", "other11.jpg", "other12.jpg"];
+        const categoriesKeys = Object.keys(targetCategories);
+        let taskSequence = []; let currentTaskIndex = 0;
+
+        function startCaptchaSequence() {
+            taskSequence = [...categoriesKeys].sort(() => 0.5 - Math.random()); currentTaskIndex = 0;
+            document.getElementById('main-content').style.display = 'none'; document.getElementById('captcha-modal').style.display = 'flex';
+            loadCaptchaUI();
+        }
+
+        function refreshCurrentTask() { loadCaptchaUI(); }
+
+        function loadCaptchaUI() {
+            const targetKey = taskSequence[currentTaskIndex];
+            document.getElementById("captcha-target-text").innerText = targetKey;
+            document.getElementById("captcha-step-info").innerText = `Шаг ${currentTaskIndex + 1} из 5`;
+            
+            let targets = targetCategories[targetKey].map(f => ({ url: f, isTarget: true }));
+            let noisePool = [...otherImages]; categoriesKeys.forEach(k => { if(k !== targetKey) noisePool.push(...targetCategories[k]); });
+            let noises = noisePool.sort(() => 0.5 - Math.random()).slice(0, 6).map(u => ({ url: u, isTarget: false }));
+            let gridItems = [...targets, ...noises].sort(() => 0.5 - Math.random());
+
+            const grid = document.getElementById("captcha-grid"); grid.innerHTML = ""; 
+            gridItems.forEach((item) => {
+                const tile = document.createElement("div"); tile.className = "captcha-tile"; tile.style.backgroundImage = `url('images/${item.url}')`;
+                tile.dataset.isTarget = item.isTarget; tile.onclick = function() { this.classList.toggle("selected"); };
+                grid.appendChild(tile);
+            });
+        }
+
+        function verifyCaptcha() {
+            const tiles = document.querySelectorAll(".captcha-tile"); let isCorrect = true; let selectedCount = 0;
+            tiles.forEach(tile => {
+                const isSelected = tile.classList.contains("selected"); const isTarget = tile.dataset.isTarget === 'true';
+                if (isSelected) selectedCount++; if ((isSelected && !isTarget) || (!isSelected && isTarget)) isCorrect = false;
+            });
+            if (isCorrect && selectedCount === 3) {
+                currentTaskIndex++;
+                if (currentTaskIndex < 5) loadCaptchaUI();
+                else { document.getElementById('captcha-modal').style.display = 'none'; window.startMinigameProcess(); }
+            } else { alert('Ошибка проверки! Начинаем заново.'); startCaptchaSequence(); }
+        }
+
+        // --- ЛОГИКА ИГРЫ С ВАШИМИ КАРТИНКАМИ ИЗ IMAGES/ ---
+        (function() {
+            const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+            let W, H;
+            
+            // ЗАГРУЗКА КАРТИНОК ДЛЯ ИГРЫ
+            const bgImg = new Image(); bgImg.src = 'images/boss_background.jpg';
+            const cityBgImg = new Image(); cityBgImg.src = 'images/zabroshenui_gorod.png';
+            const bossBgImg = new Image(); bossBgImg.src = 'images/bossfight.jpg';
+            const playerImg = new Image(); playerImg.src = 'images/kobukorm.png';
+            const airGunImg = new Image(); airGunImg.src = 'images/kobukorm_vozduh.png';
+            const droneImg = new Image(); droneImg.src = 'images/drynu.png';
+            const rocketImg = new Image(); rocketImg.src = 'images/raketa.png';
+            const bossStandImg = new Image(); bossStandImg.src = 'images/pturka_stout.png';
+            const bossAttackImg = new Image(); bossAttackImg.src = 'images/pturka_ataka.png';
+
+            let score = 0, wave = 1, health = 100, ammo = 100; const maxAmmo = 100; let reloadTimer = 0;
+            let gameRunning = false, currentLevel = 1, weaponMode = 'gun';
+            let mouseX = 0, mouseY = 0, mouseDown = false;
+
+            let playerX = 200, playerY = 0; const playerW = 171, playerH = 357; // Оригинальные размеры персонажа
+            
+            let airActive = false, airHeat = 0; const airMaxHeat = 100; let airCooldown = 0;
+            const bullets = [], drones = [], zombies = [], rockets = [], particles = [], airBeamParticles = [];
+            let shakeAmount = 0, waveKills = 0; const killsPerWave = 10;
+            
+            let boss = null, bossActive = false, bossLasers = [];
+            let droneSpawnTimer = 0, zombieSpawnTimer = 0, rocketSpawnTimer = 0, rocketsThisWave = 0;
+
+            function resize() {
+                W = window.innerWidth; H = window.innerHeight - 40;
+                canvas.width = W; canvas.height = H;
+                playerY = H - playerH + 20; // Выравнивание по полу
+            }
+            window.addEventListener('resize', resize);
+            document.getElementById('game-wrapper').addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+            });
+            document.getElementById('game-wrapper').addEventListener('mousedown', (e) => { if(e.button===0) mouseDown = true; });
+            document.getElementById('game-wrapper').addEventListener('mouseup', (e) => { if(e.button===0) mouseDown = false; });
+            window.addEventListener('keydown', (e) => {
+                if(gameRunning && e.code === 'KeyR') {
+                    weaponMode = weaponMode === 'gun' ? 'air' : 'gun';
+                    airHeat = 0; airCooldown = 0; document.getElementById('heat-bar-container').style.display='none';
+                }
+            });
+
+            // Отрисовка ЗОМБИ (Остаются кодом, как вы и просили)
+            function drawZombie(z) {
+                ctx.save(); ctx.translate(z.x, z.y);
+                const walkSway = Math.sin(z.animTimer * 0.3) * 10;
+                // Тело зомби (мутант)
+                ctx.fillStyle = '#2f855a'; ctx.fillRect(-30, -50, 60, 80); // туловище
+                ctx.fillStyle = '#22543d'; ctx.fillRect(-20, -80, 40, 30); // голова
+                ctx.fillStyle = '#c53030'; ctx.fillRect(-10, -70, 6, 6); // глаз
+                ctx.fillRect(10, -70, 6, 6); // глаз
+                // Вытянутые руки
+                ctx.fillStyle = '#2f855a'; ctx.fillRect(-40, -40, 20, 15); ctx.fillRect(-60 + walkSway, -40, 30, 10);
+                // Полоска хп
+                if (z.health < 5+wave) { ctx.fillStyle='#333'; ctx.fillRect(-30, -95, 60, 6); ctx.fillStyle='#c44'; ctx.fillRect(-30, -95, 60*(z.health/(5+wave)), 6); }
+                ctx.restore();
+            }
+
+            function spawnExplosion(x, y, count, big) {
+                for (let i=0; i<count; i++) {
+                    const angle = Math.random()*Math.PI*2, speed = big ? (3+Math.random()*6) : (1.5+Math.random()*4);
+                    particles.push({ x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 1, decay: big?0.015:0.03, size: big?8:4, color: Math.random()<0.5?'#ff4400':'#ffaa00' });
+                }
+            }
+
+            function update() {
+                if(!gameRunning) return;
+                if(ammo < maxAmmo && ++reloadTimer > 15) { ammo = Math.min(ammo+3, maxAmmo); reloadTimer=0; }
+                if(airCooldown>0) airCooldown--;
+
+                // Точка стрельбы подогнана под размер картинки игрока
+                const gunX = playerX + 102, gunY = playerY + playerH / 2 - 127;
+
+                // Стрельба
+                if(mouseDown) {
+                    if(weaponMode === 'gun' && ammo>0) {
+                        ammo--; const ang = Math.atan2(mouseY-gunY, mouseX-gunX);
+                        bullets.push({x:gunX, y:gunY, vx:Math.cos(ang)*18, vy:Math.sin(ang)*18});
+                        shakeAmount = 3;
+                    } else if (weaponMode === 'air' && airHeat<airMaxHeat && ammo>0.4 && airCooldown<=0) {
+                        airActive = true; airHeat+=1.8; ammo-=0.4;
+                        document.getElementById('heat-bar-container').style.display='block';
+                        document.getElementById('heat-bar').style.width = airHeat+'%';
+                        const ang = Math.atan2(mouseY-gunY, mouseX-gunX);
+                        airBeamParticles.push({x:gunX, y:gunY, vx:Math.cos(ang)*25 + (Math.random()-0.5)*5, vy:Math.sin(ang)*25 + (Math.random()-0.5)*5, life: 10});
+                        
+                        [drones, zombies, rockets].forEach(arr => {
+                            arr.forEach(e => {
+                                const ddx = e.x-gunX, ddy = e.y-gunY; const proj = ddx*Math.cos(ang) + ddy*Math.sin(ang);
+                                if(proj>0 && proj<400 && Math.abs(-ddx*Math.sin(ang) + ddy*Math.cos(ang))<80) {
+                                    e.vx += Math.cos(ang)*1.5; e.vy += Math.sin(ang)*1.5;
+                                    if(e.health !== undefined && proj<60) e.health -= 0.5;
+                                }
+                            });
+                        });
+                        if(airHeat>=airMaxHeat) { airCooldown=30; airActive=false; }
+                    }
+                } else {
+                    airActive=false; if(airHeat>0) { airHeat-=0.5; document.getElementById('heat-bar').style.width = airHeat+'%'; }
+                }
+
+                if(shakeAmount>0) shakeAmount*=0.8;
+
+                // Частицы
+                particles.forEach(p => { p.x+=p.vx; p.y+=p.vy; p.life-=p.decay; });
+                particles.forEach((p,i) => { if(p.life<=0) particles.splice(i,1); });
+                airBeamParticles.forEach(p => { p.x+=p.vx; p.y+=p.vy; p.life--; });
+                airBeamParticles.forEach((p,i) => { if(p.life<=0) airBeamParticles.splice(i,1); });
+
+                // Пули
+                bullets.forEach((b,i) => {
+                    b.x+=b.vx; b.y+=b.vy; let hit=false;
+                    [drones, zombies, rockets].forEach(arr => {
+                        arr.forEach((e, j) => {
+                            if(!hit && Math.hypot(b.x-e.x, b.y-e.y) < 40) {
+                                e.health--; hit=true; spawnExplosion(b.x,b.y,3,false);
+                                if(e.health<=0) { spawnExplosion(e.x,e.y,15,false); arr.splice(j,1); score+=100; waveKills++; }
+                            }
+                        });
+                    });
+                    if(bossActive && !hit && Math.hypot(b.x-boss.x, b.y-boss.y) < boss.size) {
+                        boss.health--; hit=true; spawnExplosion(b.x,b.y,5,false);
+                        if(boss.health<=0) { bossActive=false; winGame(); }
+                    }
+                    if(hit || b.x<0||b.x>W||b.y<0||b.y>H) bullets.splice(i,1);
+                });
+
+                // Враги
+                drones.forEach((d,i) => {
+                    d.wobble+=0.05; const ang=Math.atan2((playerY+playerH/2)-d.y, playerX-d.x);
+                    d.vx+=Math.cos(ang)*0.05; d.vy+=Math.sin(ang)*0.05;
+                    d.vx*=0.95; d.vy*=0.95; d.x+=d.vx; d.y+=d.vy + Math.sin(d.wobble)*2;
+                    if(Math.hypot(d.x-playerX, d.y-(playerY+playerH/2)) < 80) { health-=15; shakeAmount=10; spawnExplosion(d.x,d.y,10,false); drones.splice(i,1); }
+                });
+
+                zombies.forEach((z,i) => {
+                    z.animTimer++; const ang=Math.atan2((playerY+playerH/2)-z.y, playerX-z.x);
+                    z.vx+=Math.cos(ang)*0.02; z.vy+=Math.sin(ang)*0.02;
+                    z.vx*=0.9; z.vy*=0.9; z.x+=z.vx; z.y+=z.vy;
+                    if(Math.hypot(z.x-playerX, z.y-(playerY+playerH/2)) < 80) { health-=25; shakeAmount=15; spawnExplosion(z.x,z.y,10,false); zombies.splice(i,1); }
+                });
+
+                rockets.forEach((r,i) => {
+                    r.x+=r.vx; r.y+=r.vy;
+                    if(Math.hypot(r.x-playerX, r.y-(playerY+playerH/2)) < 80) { health-=40; shakeAmount=20; spawnExplosion(r.x,r.y,20,true); rockets.splice(i,1); }
+                    else if(r.x<-100) rockets.splice(i,1);
+                });
+
+                // Босс
+                if(bossActive) {
+                    boss.stateTimer++; boss.attackCooldown--;
+                    boss.x += Math.cos(boss.stateTimer*0.02)*2; boss.y += Math.sin(boss.stateTimer*0.03)*1.5;
+                    if(boss.stateTimer>100) { boss.state='attack'; boss.stateTimer=0; }
+                    if(boss.state==='attack') {
+                        if(boss.attackCooldown<=0) {
+                            bossLasers.push({x:boss.x, y:boss.y, vx:(playerX-boss.x)*0.015, vy:((playerY+playerH/2)-boss.y)*0.015});
+                            boss.attackCooldown=50;
+                        }
+                        if(boss.stateTimer>60) boss.state='idle';
+                    }
+                    bossLasers.forEach((l,i) => {
+                        l.x+=l.vx; l.y+=l.vy;
+                        if(Math.hypot(l.x-playerX, l.y-(playerY+playerH/2)) < 60) { health-=10; shakeAmount=5; spawnExplosion(l.x,l.y,5,false); bossLasers.splice(i,1); }
+                    });
+                }
+
+                // Спавн
+                if(!bossActive && ++droneSpawnTimer > 80 - wave*5) { droneSpawnTimer=0; drones.push({x:W+50, y:Math.random()*(H-100), vx:0, vy:0, wobble:0, health:2+wave}); }
+                if(!bossActive && currentLevel>=1 && ++zombieSpawnTimer > 150) { zombieSpawnTimer=0; zombies.push({x:W+50, y:H-50, vx:0, vy:0, animTimer:0, health:5+wave}); }
+                if(!bossActive && ++rocketSpawnTimer > 120 && rocketsThisWave<3+wave) { rocketSpawnTimer=0; rocketsThisWave++; rockets.push({x:W+100, y:Math.random()*(H-100), vx:-4-wave*0.5, vy:((playerY+playerH/2)-Math.random()*H)*0.005, health:3}); }
+
+                // Волны
+                if(waveKills >= 15) {
+                    wave++; waveKills=0; rocketsThisWave=0; health=Math.min(100, health+30);
+                    if(wave===4 && currentLevel===1) { currentLevel=2; wave=1; document.getElementById('level-indicator').textContent = 'Уровень 2: Улица'; }
+                    if(wave===4 && currentLevel===2) { currentLevel=3; wave=1; bossActive=true; boss={x:W-200, y:H/2, health:150, maxHealth:150, size:100, state:'idle', stateTimer:0, attackCooldown:0}; document.getElementById('level-indicator').textContent = 'Уровень 3: ПТЫРКА'; }
+                }
+
+                if(health<=0) { health=0; gameOver(); }
+
+                document.getElementById('g-score').textContent = score;
+                document.getElementById('g-wave').textContent = wave;
+                document.getElementById('g-ammo').textContent = Math.floor(ammo) + ' / ' + maxAmmo;
+                document.getElementById('g-health').textContent = Math.max(0, health) + '%';
+            }
+
+            function draw() {
+                ctx.clearRect(0,0,W,H);
+                ctx.save(); ctx.translate((Math.random()-0.5)*shakeAmount, (Math.random()-0.5)*shakeAmount);
+
+                // Отрисовка фона
+                let bg = bgImg;
+                if (currentLevel === 2) bg = cityBgImg;
+                if (currentLevel === 3) bg = bossBgImg;
+                if (bg.complete && bg.naturalWidth > 0) ctx.drawImage(bg, 0, 0, W, H);
+                else { ctx.fillStyle='#111'; ctx.fillRect(0,0,W,H); }
+
+                // Отрисовка игрока (с отражением, чтобы смотрел вправо)
+                ctx.save(); ctx.translate(playerX, playerY); ctx.scale(-1, 1);
+                const useImg = weaponMode === 'air' ? airGunImg : playerImg;
+                if (useImg.complete && useImg.naturalWidth > 0) {
+                    if (weaponMode === 'air') ctx.drawImage(useImg, -130/2, 0, 130, 350);
+                    else ctx.drawImage(useImg, -playerW/2, 0, playerW, playerH);
+                }
+                ctx.restore();
+
+                // Отрисовка зомби
+                zombies.forEach(drawZombie);
+
+                // Отрисовка дронов
+                drones.forEach(d => {
+                    ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(Math.sin(d.wobble)*0.2);
+                    if(droneImg.complete && droneImg.naturalWidth > 0) ctx.drawImage(droneImg, -34, -34, 68, 68);
+                    ctx.restore();
+                });
+
+                // Отрисовка ракет
+                rockets.forEach(r => {
+                    ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(Math.atan2(r.vy, r.vx));
+                    if(rocketImg.complete && rocketImg.naturalWidth > 0) ctx.drawImage(rocketImg, -60, -16, 120, 32);
+                    // Огонь из сопла
+                    ctx.fillStyle='#ff9900'; ctx.beginPath(); ctx.arc(-60, 0, 8+Math.random()*5, 0, Math.PI*2); ctx.fill();
+                    ctx.restore();
+                });
+
+                // Отрисовка босса
+                if(bossActive) {
+                    ctx.save(); ctx.translate(boss.x, boss.y);
+                    const bImg = boss.state === 'attack' ? bossAttackImg : bossStandImg;
+                    if(bImg.complete && bImg.naturalWidth > 0) ctx.drawImage(bImg, -boss.size, -boss.size, boss.size*2, boss.size*2);
+                    // Полоска хп босса
+                    ctx.fillStyle='#333'; ctx.fillRect(-75, -boss.size-30, 150, 14);
+                    ctx.fillStyle='#c44'; ctx.fillRect(-75, -boss.size-30, 150*(boss.health/boss.maxHealth), 14);
+                    ctx.fillStyle='#fff'; ctx.font='bold 14px "Courier New"'; ctx.textAlign='center'; ctx.fillText('ПТЫРКА', 0, -boss.size-38);
+                    ctx.restore();
+                    
+                    bossLasers.forEach(l => { ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(l.x,l.y,8,0,Math.PI*2); ctx.fill(); });
+                }
+
+                ctx.fillStyle='#ffcc00'; bullets.forEach(b => ctx.fillRect(b.x-3, b.y-3, 6, 6));
+                ctx.fillStyle='#63b3ed'; airBeamParticles.forEach(p => { ctx.globalAlpha=p.life/10; ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill(); }); ctx.globalAlpha=1;
+                particles.forEach(p => { ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.fillRect(p.x-p.size/2, p.y-p.size/2, p.size, p.size); }); ctx.globalAlpha=1;
+
+                // Прицел
+                ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.moveTo(mouseX-15,mouseY); ctx.lineTo(mouseX+15,mouseY); ctx.moveTo(mouseX,mouseY-15); ctx.lineTo(mouseX,mouseY+15); ctx.stroke();
+
+                ctx.restore();
+            }
+
+            function loop() { if(gameRunning){ update(); draw(); requestAnimationFrame(loop); } }
+
+            function gameOver() {
+                gameRunning = false;
+                document.getElementById('final-score').textContent = 'Счёт: ' + score;
+                document.getElementById('final-wave').textContent = 'Волна: ' + wave;
+                document.getElementById('game-over').style.display = 'flex';
+            }
+
+            function winGame() {
+                gameRunning = false;
+                document.getElementById('game-wrapper').style.display = 'none';
+                document.getElementById('main-content').style.display = 'flex';
+                animateKeyReveal('W269N-WFGWX-YVC9B-4J6C9-T83GX');
+            }
+
+            window.startMinigameProcess = function() {
+                resize(); document.getElementById('game-wrapper').style.display = 'block'; window.restartMinigame();
+            };
+
+            window.restartMinigame = function() {
+                score=0; wave=1; health=100; ammo=100; currentLevel=1; waveKills=0; weaponMode='gun';
+                drones.length=0; zombies.length=0; rockets.length=0; bullets.length=0; particles.length=0; bossLasers.length=0; bossActive=false;
+                document.getElementById('game-over').style.display = 'none';
+                document.getElementById('level-indicator').textContent = 'Уровень 1: Оборона базы';
+                gameRunning = true; loop();
+            };
+
+        })();
+
+        // --- АНИМАЦИЯ КЛЮЧА ---
+        function animateKeyReveal(finalKey) {
+            const keyBox = document.getElementById('keyBox'); keyBox.style.color = 'white';
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let iterations = 0; const maxIterations = 50; const interval = 40;
+
+            const timer = setInterval(() => {
+                let currentText = finalKey.split('').map((char, index) => {
+                    if (char === '-') return '-';
+                    if (index < (iterations / maxIterations) * finalKey.length) return finalKey[index];
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join('');
+                keyBox.value = currentText;
+
+                if (iterations >= maxIterations) { clearInterval(timer); keyBox.value = finalKey; }
+                iterations++;
+            }, interval);
+        }
+    </script>
+</body>
+</html>
